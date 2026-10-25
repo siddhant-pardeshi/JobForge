@@ -1,5 +1,22 @@
 # JobForge
 
+<p align="center">
+  <img src="docs/media/banner.svg" alt="JobForge, an AI powered job hunt cockpit" width="880"/>
+</p>
+
+<p align="center">
+  <a href="https://github.com/siddhant-pardeshi/JobForge/stargazers"><img src="https://img.shields.io/github/stars/siddhant-pardeshi/JobForge?style=for-the-badge&color=ff5c1a&labelColor=0b0b15&logo=github" alt="stars"/></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-ff2e88?style=for-the-badge&labelColor=0b0b15" alt="MIT license"/></a>
+  <img src="https://img.shields.io/badge/tests-25%20passing-34d399?style=for-the-badge&labelColor=0b0b15" alt="tests"/>
+  <img src="https://img.shields.io/badge/node-20%2B-8b5cf6?style=for-the-badge&labelColor=0b0b15&logo=nodedotjs&logoColor=white" alt="node 20 or newer"/>
+  <a href="docs/media/jobforge-walkthrough.wav"><img src="https://img.shields.io/badge/voice%20walkthrough-8%20min-22d3ee?style=for-the-badge&labelColor=0b0b15" alt="voice walkthrough"/></a>
+  <a href="extension/README.md"><img src="https://img.shields.io/badge/Chrome%20helper-capture%20%2B%20autofill-fbbf24?style=for-the-badge&labelColor=0b0b15&logo=googlechrome&logoColor=white" alt="Chrome helper"/></a>
+</p>
+
+<p align="center">
+  <a href="https://readme-typing-svg.demolab.com"><img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&size=17&pause=1100&color=FF8A3D&center=true&vCenter=true&width=720&lines=Real+openings+from+21+verified+employer+boards;Explainable+matching+with+nothing+hidden;Mail+fraud+screening+before+you+trust+anyone;A+tracker+that+organizes+itself+and+reminds+you;Pune+first.+India+wide.+Remote+honest." alt="animated taglines"/></a>
+</p>
+
 **An AI powered job hunt cockpit for tech job seekers in India. Real companies, real openings, zero fake data.**
 
 JobForge reads your resume, pulls genuine openings live from verified employer career boards, scores every one with explainable matching, screens recruitment scams before they reach you, prices relocation offers honestly, and tracks every application from shortlist to offer. A companion browser extension captures postings from LinkedIn, Naukri, and any company careers page with one click, and prefills application forms from your approved answers.

@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300" role="img" aria-label="JobForge banner">
+  <defs>
+    <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff5c1a"/>
+      <stop offset="0.5" stop-color="#ff2e88"/>
+      <stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="sheenGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="blobViolet" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#8b5cf6" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#8b5cf6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="blobOrange" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ff5c1a" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#ff5c1a" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="42"/>
+    </filter>
+    <filter id="glowSoft" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+    <clipPath id="titleClip">
+      <text x="248" y="150" font-family="Segoe UI, Arial, sans-serif" font-size="88" font-weight="800" letter-spacing="-2">JobForge</text>
+    </clipPath>
+  </defs>
+
+  <style>
+    .bg { fill: #07070c; }
+    .blob1 { animation: drift1 26s ease-in-out infinite alternate; }
+    .blob2 { animation: drift2 30s ease-in-out infinite alternate; }
+    @keyframes drift1 { 0% { transform: translate(0px, 0px); } 100% { transform: translate(70px, 46px); } }
+    @keyframes drift2 { 0% { transform: translate(0px, 0px); } 100% { transform: translate(-60px, -40px); } }
+    .ember { animation-name: rise; animation-timing-function: linear; animation-iteration-count: infinite; }
+    @keyframes rise {
+      0% { transform: translateY(0px); opacity: 0; }
+      8% { opacity: 0.95; }
+      85% { opacity: 0.55; }
+      100% { transform: translateY(-370px); opacity: 0; }
+    }
+    .logoGlow { animation: glowPulse 3.2s ease-in-out infinite; }
+    @keyframes glowPulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 0.9; } }
+    .sheen { animation: sheenSweep 3.8s ease-in-out infinite; }
+    @keyframes sheenSweep { 0% { transform: translateX(-240px) skewX(-18deg); } 55%, 100% { transform: translateX(420px) skewX(-18deg); } }
+    .bar { transform-origin: 248px 0px; animation: barSweep 3s ease-in-out infinite alternate; }
+    @keyframes barSweep { 0% { transform: scaleX(0.25); } 100% { transform: scaleX(1); } }
+    .chip { fill: #10101c; stroke: #ffffff2b; }
+    .chipText { fill: #a09bae; font-family: Segoe UI, Arial, sans-serif; font-size: 15px; font-weight: 600; }
+  </style>
+
+  <rect class="bg" x="0" y="0" width="1200" height="300"/>
+
+  <circle class="blob1" cx="220" cy="40" r="300" fill="url(#blobViolet)" filter="url(#soft)"/>
+  <circle class="blob2" cx="1020" cy="270" r="290" fill="url(#blobOrange)" filter="url(#soft)"/>
+
+  <!-- rising embers -->
+  <circle class="ember" cx="80"  cy="315" r="3.2" fill="#ff5c1a" style="animation-duration: 7s;  animation-delay: -0.5s"/>
+  <circle class="ember" cx="150" cy="315" r="2.2" fill="#ff2e88" style="animation-duration: 9s;  animation-delay: -3s"/>
+  <circle class="ember" cx="230" cy="315" r="2.8" fill="#8b5cf6" style="animation-duration: 8s;  animation-delay: -1.2s"/>
+  <circle class="ember" cx="320" cy="315" r="2"   fill="#ff8a3d" style="animation-duration: 10s; animation-delay: -6s"/>
+  <circle class="ember" cx="410" cy="315" r="3"   fill="#ff2e88" style="animation-duration: 7.5s;animation-delay: -4.4s"/>
+  <circle class="ember" cx="500" cy="315" r="2.4" fill="#ff5c1a" style="animation-duration: 9.5s;animation-delay: -2.1s"/>
+  <circle class="ember" cx="590" cy="315" r="2"   fill="#8b5cf6" style="animation-duration: 11s; animation-delay: -7s"/>
+  <circle class="ember" cx="680" cy="315" r="3.4" fill="#ff5c1a" style="animation-duration: 8.5s;animation-delay: -5.2s"/>
+  <circle class="ember" cx="760" cy="315" r="2.2" fill="#ff2e88" style="animation-duration: 9s;  animation-delay: -0.9s"/>
+  <circle class="ember" cx="845" cy="315" r="2.8" fill="#ff8a3d" style="animation-duration: 7.8s;animation-delay: -3.7s"/>
+  <circle class="ember" cx="930" cy="315" r="2"   fill="#8b5cf6" style="animation-duration: 10.5s;animation-delay: -8s"/>
+  <circle class="ember" cx="1010" cy="315" r="3.1" fill="#ff2e88" style="animation-duration: 8.2s;animation-delay: -1.8s"/>
+  <circle class="ember" cx="1090" cy="315" r="2.3" fill="#ff5c1a" style="animation-duration: 9.8s;animation-delay: -5.9s"/>
+  <circle class="ember" cx="1150" cy="315" r="2.7" fill="#8b5cf6" style="animation-duration: 7.2s;animation-delay: -2.6s"/>
+  <circle class="ember" cx="1205" cy="315" r="2"  fill="#ff8a3d" style="animation-duration: 10.2s;animation-delay: -6.8s"/>
+
+  <!-- brand mark -->
+  <g transform="translate(88, 88)">
+    <rect class="logoGlow" x="-14" y="-14" width="148" height="148" rx="44" fill="url(#grad)" filter="url(#glowSoft)"/>
+    <rect x="0" y="0" width="120" height="120" rx="36" fill="url(#grad)"/>
+    <path d="M60 22 C79 46 94 58 94 81 C94 101 79 112 60 112 C41 112 26 101 26 81 C26 60 45 49 51 33 C55 46 66 48 60 22 Z" fill="#07070c"/>
+  </g>
+
+  <!-- title with animated sheen -->
+  <text x="248" y="150" font-family="Segoe UI, Arial, sans-serif" font-size="88" font-weight="800" letter-spacing="-2" fill="url(#grad)">JobForge</text>
+  <g clip-path="url(#titleClip)">
+    <rect class="sheen" x="150" y="60" width="130" height="110" fill="url(#sheenGrad)"/>
+  </g>
+
+  <text x="253" y="198" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="500" fill="#a09bae">Hunt smarter. Land faster.</text>
+
+  <rect class="bar" x="248" y="216" width="420" height="5" rx="3" fill="url(#grad)"/>
+
+  <!-- capability chips -->
+  <g>
+    <rect class="chip" x="252" y="240" width="186" height="34" rx="17"/>
+    <text class="chipText" x="272" y="262">21 verified boards</text>
+    <rect class="chip" x="450" y="240" width="168" height="34" rx="17"/>
+    <text class="chipText" x="470" y="262">mail fraud shield</text>
+    <rect class="chip" x="630" y="240" width="216" height="34" rx="17"/>
+    <text class="chipText" x="650" y="262">self organizing board</text>
+  </g>
+</svg>
