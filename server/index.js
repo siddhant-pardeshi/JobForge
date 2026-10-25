@@ -2,7 +2,6 @@ import express from 'express';
 import compression from 'compression';
 import path from 'path';
 import fs from 'fs';
-import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import routes, { warmScores } from './routes.js';
 import { bootstrap, load, save } from './store.js';

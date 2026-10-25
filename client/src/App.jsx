@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { Routes, Route, NavLink, useLocation, useNavigate, Navigate } from 'react-router-dom';
-import { AnimatePresence as _AP, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Flame, LayoutDashboard, Compass, FileText, Radio, ShieldAlert, Plane, KanbanSquare, Settings2, Sparkles, PlayCircle } from 'lucide-react';
 import { api } from './api.js';
 import { ToastProvider, Page } from './ui.jsx';

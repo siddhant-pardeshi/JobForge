@@ -26,6 +26,7 @@ export default function Jobs() {
   const [tab, setTab] = useState('all');
   const [q, setQ] = useState('');
   const [minScore, setMinScore] = useState(0);
+  const [limit, setLimit] = useState(60);
   const [openId, setOpenId] = useState(null);
   const [detail, setDetail] = useState(null);
   const [importOpen, setImportOpen] = useState(false);
@@ -113,7 +114,7 @@ export default function Jobs() {
 
       <div className="tabs">
         {TABS.map((t) => (
-          <button key={t.id} className={`tab ${tab === t.id ? 'on' : ''}`} onClick={() => setTab(t.id)}>
+          <button key={t.id} className={`tab ${tab === t.id ? 'on' : ''}`} onClick={() => { setTab(t.id); setLimit(60); }}>
             {t.label}<span className="cnt">{laneCount(t.id)}</span>
           </button>
         ))}
@@ -127,9 +128,16 @@ export default function Jobs() {
 
       <motion.div layout style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>
         <AnimatePresence>
-          {jobs.map((job, i) => <JobCard key={job.id} job={job} index={i} onOpen={openJob} />)}
+          {jobs.slice(0, limit).map((job, i) => <JobCard key={job.id} job={job} index={i} onOpen={openJob} />)}
         </AnimatePresence>
       </motion.div>
+
+      {jobs.length > limit && (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, marginTop: 18 }}>
+          <button className="btn sm" onClick={() => setLimit(limit + 60)}>Show 60 more</button>
+          <span style={{ fontSize: 11.5, color: 'var(--faint)' }}>Showing {limit} of {jobs.length} in this view. Filters and search narrow it fastest.</span>
+        </div>
+      )}
 
       {/* search strings */}
       {detail?.booleanStrings && (
