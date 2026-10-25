@@ -236,51 +236,75 @@ function setValue(el, value) {
   el.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
-async function autofill() {
-  if (!token) { say('Pair first: paste your JobForge token in the helper options.'); return; }
-  say('Fetching your approved answers...');
-  let packet;
+const FILL_MATCHERS = [
+  { test: /first\s*name/i, key: 'firstName' },
+  { test: /last\s*name|surname|family\s*name/i, key: 'lastName' },
+  { test: /full\s*name|^name$|candidate\s*name|your\s*name|applicant\s*name/i, key: 'name' },
+  { test: /email|mail\s*id/i, key: 'email' },
+  { test: /phone|mobile|contact\s*number/i, key: 'phone' },
+  { test: /current\s*city|^city$|town/i, key: 'city' },
+  { test: /linkedin/i, key: 'linkedin' },
+  { test: /github/i, key: 'github' },
+  { test: /portfolio|website|blog/i, key: 'github' },
+  { test: /notice\s*period|notice/i, key: 'notice' },
+  { test: /expected\s*(ctc|salary)|salary\s*expectation|expected\s*compensation/i, key: 'salary' },
+  { test: /current\s*(ctc|salary)/i, key: 'currentSalary' },
+  { test: /relocat/i, key: 'relocation' },
+  { test: /experience.*years|total\s*experience|years\s*of\s*experience|experience\s*\(?\s*in\s*years\s*\)?/i, key: 'experience' },
+  { test: /why.*hire|why.*you|cover\s*letter|about\s*yourself|summary/i, key: 'why', textarea: true }
+];
+
+// Merge locally saved corrections over the server packet, then remember every
+// value actually used so a fill is never lost or repeated wrongly.
+async function resolveFillValues() {
+  const local = await new Promise((r) => chrome.storage.local.get(['fields', 'lastUsed'], (s) => r(s)));
+  const localFields = local.fields || {};
+  let server = null;
   try {
     const res = await fetch(`${SERVER()}/api/extension/packet`, { headers: { 'x-jobforge-token': token } });
-    packet = await res.json();
-    if (!res.ok) { say(packet.error || 'Could not fetch your profile from JobForge.'); return; }
-  } catch {
-    say('Could not reach JobForge on localhost:8787. Start it first.');
-    return;
+    if (res.ok) server = (await res.json()).contact || {};
+  } catch { /* offline: local values still work */ }
+  const values = {};
+  for (const key of ['name', 'email', 'phone', 'city', 'linkedin', 'github', 'notice', 'salary', 'relocation', 'experience', 'why']) {
+    values[key] = localFields[key] || server?.[key] || local.lastUsed?.[key] || '';
   }
-  const profile = packet.contact || {};
-  const answers = {};
-  for (const a of packet.answers || []) {
-    const q = a.question.toLowerCase();
-    if (q.includes('notice')) answers.notice = a.value;
-    else if (q.includes('salary') || q.includes('ctc')) answers.salary = a.value;
-    else if (q.includes('relocat')) answers.relocation = a.value;
-    else if (q.includes('why')) answers.why = a.value;
-  }
-  answers.firstName = (profile.name || '').split(' ')[0] || '';
-  answers.lastName = (profile.name || '').split(' ').slice(1).join(' ') || '';
-  Object.assign(answers, profile);
+  values.firstName = (values.name || '').split(' ')[0] || '';
+  values.lastName = (values.name || '').split(' ').slice(1).join(' ') || '';
+  return { values, usedLocal: Object.keys(localFields || {}).length > 0 };
+}
+
+async function autofill() {
+  if (!token) { say('Pair first: paste your JobForge token in the helper options.'); return; }
+  say('Reading your saved autofill data...');
+  const { values } = await resolveFillValues();
 
   const fields = [...document.querySelectorAll('input:not([type=hidden]):not([type=submit]):not([type=checkbox]):not([type=radio]), textarea')];
   let filled = 0;
+  const used = {};
   for (const el of fields) {
     if (el.dataset.jfFilled) continue;
     const label = labelFor(el);
     if (!label && !el.name && !el.id) continue;
-    for (const m of FIELD_MATCHERS) {
+    for (const m of FILL_MATCHERS) {
       if (m.textarea && !(el instanceof HTMLTextAreaElement)) continue;
       if (m.test.test(label)) {
-        const value = answers[m.key];
-        if (value !== undefined && value !== null && String(value).trim() && String(value) !== 'null') {
+        const value = values[m.key];
+        if (value && String(value).trim() && String(value) !== 'null') {
           setValue(el, String(value));
           el.dataset.jfFilled = '1';
+          used[m.key] = String(value);
           filled++;
         }
         break;
       }
     }
   }
-  say(filled ? `Filled ${filled} field${filled > 1 ? 's' : ''} from your approved answers. Review everything, then press submit yourself.` : 'No recognizable fields matched here. Nothing was changed.');
+  if (filled > 0) {
+    chrome.storage.local.set({ lastUsed: { ...values, ...used } });
+    say(`Filled ${filled} field${filled > 1 ? 's' : ''} from your saved data, which is now remembered. Review everything, then press submit yourself.`);
+  } else {
+    say('No recognizable fields matched here. Nothing was changed. Edit your values in the helper options if needed.');
+  }
 }
 
 // Watch single page apps: LinkedIn and Naukri swap content without navigation.

@@ -4,37 +4,82 @@
   <meta charset="utf-8" />
   <title>JobForge Helper</title>
   <style>
-    body { width: 340px; margin: 0; padding: 18px; font-family: 'Inter', -apple-system, sans-serif; background: #0a0a12; color: #f5f3ef; }
+    body { width: 380px; margin: 0; padding: 18px; font-family: 'Inter', -apple-system, sans-serif; background: #0a0a12; color: #f5f3ef; max-height: 560px; overflow-y: auto; }
     h1 { font-size: 16px; margin: 0 0 4px; display: flex; align-items: center; gap: 8px; }
+    h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .12em; color: #ff8a3d; margin: 18px 0 8px; }
     .mark { width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(120deg, #ff5c1a, #ff2e88 55%, #8b5cf6); display: inline-block; }
     p { font-size: 12px; color: #a09bae; margin: 10px 0 14px; line-height: 1.55; }
-    label { display: block; font-size: 10.5px; text-transform: uppercase; letter-spacing: .1em; color: #6b6779; margin-bottom: 5px; }
-    input { width: 100%; box-sizing: border-box; padding: 9px 11px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.35); color: #f5f3ef; font-size: 12.5px; outline: none; }
-    input:focus { border-color: #ff5c1a; }
-    button { margin-top: 12px; width: 100%; padding: 10px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px; color: #fff; background: linear-gradient(120deg, #ff5c1a, #ff2e88 55%, #8b5cf6); }
+    label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: #6b6779; margin: 8px 0 4px; }
+    input, textarea { width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.35); color: #f5f3ef; font-size: 12.5px; outline: none; font-family: inherit; }
+    input:focus, textarea:focus { border-color: #ff5c1a; }
+    textarea { min-height: 56px; resize: vertical; }
+    button { margin-top: 10px; width: 100%; padding: 10px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px; color: #fff; background: linear-gradient(120deg, #ff5c1a, #ff2e88 55%, #8b5cf6); }
     button.ghost { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.16); }
+    button.small { padding: 7px; font-size: 11.5px; margin-top: 6px; }
     #status { margin-top: 10px; font-size: 12px; min-height: 16px; }
     #status.ok { color: #8af0c8; }
     #status.err { color: #ffa2a2; }
+    .row { display: flex; gap: 8px; }
+    .row > div { flex: 1; }
+    details { margin-top: 6px; }
+    summary { cursor: pointer; font-size: 11.5px; color: #8b8496; }
   </style>
 </head>
 <body>
   <h1><span class="mark"></span> JobForge Helper</h1>
-  <p>
-    Paste the extension token from JobForge Settings to pair this browser with your local cockpit.
-    The helper talks only to your own machine.
-  </p>
+
+  <h2>Pairing</h2>
   <label for="server">Server address</label>
   <input id="server" placeholder="http://localhost:8787" />
-  <label for="token" style="margin-top:12px">Extension token</label>
+  <label for="token">Extension token</label>
   <input id="token" placeholder="jf_..." />
-  <button id="save">Pair with JobForge</button>
-  <button id="test" class="ghost">Test connection</button>
+  <div class="row">
+    <button id="save">Pair</button>
+    <button id="test" class="ghost">Test</button>
+  </div>
   <div id="status"></div>
-  <p style="margin-top:14px; font-size:10.5px; color:#6b6779;">
-    The helper captures postings you choose and prefills forms from your approved answers.
-    It never submits anything and never reads pages you have not opened.
+
+  <h2>Your autofill data</h2>
+  <p style="margin-bottom: 6px;">
+    Sync once from JobForge, then edit anything here and press Save. These saved values are what the
+    helper fills, so a wrong value can be corrected here and it never autofills wrong again. Last used
+    values are also remembered automatically after every fill.
   </p>
+  <label for="f_name">Full name</label>
+  <input id="f_name" />
+  <div class="row">
+    <div><label for="f_email">Email</label><input id="f_email" /></div>
+    <div><label for="f_phone">Phone</label><input id="f_phone" /></div>
+  </div>
+  <div class="row">
+    <div><label for="f_city">Current city</label><input id="f_city" /></div>
+    <div><label for="f_experience">Experience answer</label><input id="f_experience" placeholder="e.g. Fresher, 0 years" /></div>
+  </div>
+  <label for="f_linkedin">LinkedIn URL</label>
+  <input id="f_linkedin" />
+  <label for="f_github">GitHub or portfolio</label>
+  <input id="f_github" />
+  <label for="f_notice">Notice period answer</label>
+  <input id="f_notice" />
+  <label for="f_salary">Expected pay answer</label>
+  <input id="f_salary" placeholder="Leave empty unless you want it filled" />
+  <label for="f_relocation">Relocation answer</label>
+  <input id="f_relocation" />
+  <label for="f_why">Why hire me answer</label>
+  <textarea id="f_why"></textarea>
+  <div class="row">
+    <button id="saveFields">Save autofill data</button>
+    <button id="sync" class="ghost">Sync from JobForge</button>
+  </div>
+  <details>
+    <summary>Where do these values come from?</summary>
+    <p style="margin: 6px 0 0;">
+      Sync pulls your JobForge profile plus everything you approved in the app. The editor here overrides
+      the server until you sync again, so fixes made on the road stick. The app has the same editor under
+      Settings, Autofill data, when you want to fix values at the source.
+    </p>
+  </details>
+
   <script src="options.js"></script>
 </body>
 </html>

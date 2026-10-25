@@ -21,7 +21,21 @@ export function resumeDir() {
   return RESUME_DIR;
 }
 
-const FILES = ['settings', 'profile', 'jobs', 'applications', 'companies', 'scamlog', 'answers', 'packets', 'packetsIndex', 'sourceRuns'];
+const FILES = ['settings', 'profile', 'jobs', 'applications', 'companies', 'scamlog', 'answers', 'packets', 'packetsIndex', 'sourceRuns', 'filldata'];
+
+export const FILL_FIELDS = [
+  { id: 'name', label: 'Full name' },
+  { id: 'email', label: 'Email' },
+  { id: 'phone', label: 'Phone' },
+  { id: 'city', label: 'Current city' },
+  { id: 'linkedin', label: 'LinkedIn profile URL' },
+  { id: 'github', label: 'GitHub or portfolio URL' },
+  { id: 'notice', label: 'Notice period answer' },
+  { id: 'salary', label: 'Expected pay answer (only what you approve)' },
+  { id: 'relocation', label: 'Relocation answer' },
+  { id: 'experience', label: 'Total experience answer' },
+  { id: 'why', label: 'Why hire me answer (long form)' }
+];
 
 export function load(name) {
   const file = path.join(DATA_DIR, `${name}.json`);
@@ -103,6 +117,7 @@ export function bootstrap() {
   if (!load('scamlog')) save('scamlog', []);
   if (!load('packets')) save('packets', []);
   if (!load('sourceRuns')) save('sourceRuns', []);
+  if (!load('filldata')) save('filldata', {});
   return settings;
 }
 

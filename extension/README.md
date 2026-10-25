@@ -5,8 +5,10 @@ A Chrome extension (Manifest V3) that connects your daily browsing to your local
 ## What it does
 
 * **Capture.** On any job posting you open, a floating Send to JobForge button appears. One click sends the posting's title, company, location, description, and links to your local cockpit, where it is classified, scored, and scam screened within a second. LinkedIn, Naukri, Greenhouse, Lever, Ashby, SmartRecruiters, Workday, and any page embedding schema.org JobPosting structured data are supported. Postings are captured once; repeats are detected and skipped.
-* **Autofill.** On application forms, an Autofill with JobForge button fills the fields it recognizes from your JobForge profile and approved answer bank: name, email, phone, city, LinkedIn, GitHub, notice period, expected pay where you approved an answer, relocation stance, and a drafted motivation text for long answer boxes. Each filled field is marked, you review, and you press submit yourself.
+* **Autofill with memory.** On application forms, an Autofill with JobForge button fills recognized fields from your saved data: name, email, phone, city, LinkedIn, GitHub, notice period, experience answer, relocation stance, expected pay only where you saved one, and a drafted motivation text for long answer boxes. Every value it fills is remembered, and every value is editable in the options panel, so a wrong fill is corrected once and never repeats. Corrections saved in the app under Settings, Autofill data, flow in through the Sync button, and local edits stick until the next sync.
 * **Pairing.** The extension talks only to your JobForge server on localhost, guarded by a token you paste from the Settings page. No other server, no telemetry, no remote code.
+
+The focused, step by step manual for installing the extension and running quick Naukri and LinkedIn application loops lives in [docs/EXTENSION_GUIDE.md](../docs/EXTENSION_GUIDE.md).
 
 ## What it deliberately does not do
 

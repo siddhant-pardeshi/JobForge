@@ -3,7 +3,7 @@ import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
-import { load, save, id, bootstrap, resumeDir, DATA_DIR, DEFAULT_SETTINGS, DEFAULT_ANSWERS } from './store.js';
+import { load, save, id, bootstrap, resumeDir, DATA_DIR, DEFAULT_SETTINGS, DEFAULT_ANSWERS, FILL_FIELDS } from './store.js';
 import { extractText, draftProfile } from './services/parser.js';
 import { scoreJob, mergeDuplicates, parseExperience, classify } from './services/scoring.js';
 import { analyzeScam } from './services/scam.js';
@@ -495,6 +495,28 @@ router.put('/answers/:id', ah(async (req, res) => {
   res.json({ ok: true, answers });
 }));
 
+// Editable autofill data. These values override everything the helper fills,
+// so a wrong value is fixed once here and never autofills wrong again.
+router.get('/filldata', ah(async (req, res) => {
+  res.json({ filldata: load('filldata') || {}, fields: FILL_FIELDS });
+}));
+
+router.put('/filldata', ah(async (req, res) => {
+  const existing = load('filldata') || {};
+  const incoming = req.body || {};
+  const merged = { ...existing };
+  for (const field of FILL_FIELDS) {
+    if (incoming[field.id] !== undefined) {
+      const value = String(incoming[field.id] ?? '').trim();
+      if (value) merged[field.id] = value;
+      else delete merged[field.id];
+    }
+  }
+  merged.updatedAt = new Date().toISOString();
+  save('filldata', merged);
+  res.json({ ok: true, filldata: merged });
+}));
+
 // ---- browser extension bridge (token gated, localhost only) ----
 function extensionAuth(req, res) {
   const settings = getSettings();
@@ -573,20 +595,44 @@ router.get('/extension/packet', ah(async (req, res) => {
   if (!extensionAuth(req, res)) return;
   const profile = getProfile() || {};
   const answers = (load('answers') || []).filter((a) => a.approved && a.value);
+  const filldata = load('filldata') || {};
+  // Fill data edited in the app always wins over derived values, so a wrong
+  // value is corrected once and never autofills wrong again.
+  const answersMap = {};
+  for (const a of answers) {
+    const q = a.question.toLowerCase();
+    if (q.includes('notice')) answersMap.notice = a.value;
+    else if (q.includes('salary') || q.includes('ctc')) answersMap.salary = a.value;
+    else if (q.includes('relocat')) answersMap.relocation = a.value;
+    else if (q.includes('why')) answersMap.why = a.value;
+  }
+  const merged = {
+    name: filldata.name || profile.name || '',
+    email: filldata.email || profile.email || '',
+    phone: filldata.phone || profile.phone || '',
+    city: filldata.city || profile.city || '',
+    linkedin: filldata.linkedin || profile.linkedin || '',
+    github: filldata.github || profile.github || '',
+    notice: filldata.notice || answersMap.notice || '',
+    salary: filldata.salary || answersMap.salary || '',
+    relocation: filldata.relocation || answersMap.relocation || '',
+    experience: filldata.experience || '',
+    why: filldata.why || answersMap.why || ''
+  };
   res.json({
     ok: true,
-    contact: {
-      name: profile.name || '', email: profile.email || '', phone: profile.phone || '',
-      city: profile.city || '', linkedin: profile.linkedin || '', github: profile.github || ''
-    },
-    answers: answers.map((a) => ({ question: a.question, value: a.value }))
+    contact: merged,
+    answers: Object.entries(merged)
+      .filter(([key, value]) => value && !['name', 'email', 'phone', 'city', 'linkedin', 'github'].includes(key))
+      .map(([key, value]) => ({ question: key, value })),
+    fillOverrides: Object.keys(filldata).filter((k) => k !== 'updatedAt')
   });
 }));
 
 // ---- data ----
 router.get('/export', ah(async (req, res) => {
   const bundle = {};
-  for (const name of ['settings', 'profile', 'jobs', 'applications', 'companies', 'scamlog', 'answers', 'packets', 'sourceRuns']) {
+  for (const name of ['settings', 'profile', 'jobs', 'applications', 'companies', 'scamlog', 'answers', 'packets', 'sourceRuns', 'filldata']) {
     bundle[name] = load(name);
   }
   bundle.exportedAt = new Date().toISOString();
@@ -598,7 +644,7 @@ router.get('/export', ah(async (req, res) => {
 
 router.post('/reset', ah(async (req, res) => {
   if (!req.body?.confirm) return res.status(400).json({ error: 'Pass confirm true. This wipes profile, jobs, tracker, logs, and settings' });
-  for (const name of ['settings', 'profile', 'jobs', 'applications', 'companies', 'scamlog', 'answers', 'packets', 'sourceRuns']) {
+  for (const name of ['settings', 'profile', 'jobs', 'applications', 'companies', 'scamlog', 'answers', 'packets', 'sourceRuns', 'filldata']) {
     try { fs.unlinkSync(path.join(DATA_DIR, `${name}.json`)); } catch { /* already gone */ }
   }
   try { fs.rmSync(resumeDir(), { recursive: true, force: true }); } catch { /* already gone */ }

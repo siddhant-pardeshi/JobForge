@@ -18,7 +18,9 @@ State of every capability as of the real data release, 25 October 2026. The cate
 * Application state machine with receipt backed submissions, confirmation pending handling, and duplicate blocking.
 * Answer bank with scope and approval flags, surfaced to the extension autofill.
 * Boolean search strings for LinkedIn, Naukri, and Google indexed ATS boards.
-* JobForge Helper browser extension: capture on LinkedIn, Naukri, Greenhouse, Lever, Ashby, SmartRecruiters, Workday, and structured data pages; form autofill from approved answers; token gated pairing to localhost only.
+* JobForge Helper browser extension: capture on LinkedIn, Naukri, Greenhouse, Lever, Ashby, SmartRecruiters, Workday, and structured data pages; form autofill from approved answers with persistent editable memory (app side editor, extension side editor with sync, and last used value tracking); token gated pairing to localhost only.
+* Application packets with tailored cover letter (AI or rules drafted, resume grounded), a roughly one hundred character referral request message with character count, and copy buttons for both.
+* Narrated voice walkthrough audio shipped at docs/media/jobforge-walkthrough.wav plus the in app tour and recording script.
 * Guided in app tour with spoken narration through the browser speech engine and a matching recording script in docs/WALKTHROUGH.md.
 * Data export as JSON and full local reset.
 * 21 automated acceptance tests via npm test.

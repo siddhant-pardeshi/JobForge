@@ -5,13 +5,18 @@
 import { chat, extractJson, llmStatus } from './llm.js';
 import { canonicalSkills } from '../taxonomy.js';
 
-const TRUTH_RULES = `You tailor resumes for a job seeker.
+const TRUTH_RULES = `You tailor application documents for a job seeker.
 HARD RULES:
 - Use ONLY facts present in the provided resume text and profile. Never invent employers, skills, metrics, dates, certifications, or results.
 - You may reorder, group, and reword for clarity. You may mirror terminology from the job description only for things the candidate actually did.
 - If the resume does not support a requirement, list it as a gap. Never paper over a gap.
 - Any suggestion that needs a number the resume lacks must become a question for the candidate, not a fabricated bullet.
-Return a single JSON object with keys: summary (string, 2 sentences max), bullets (array of strings, each grounded in resume facts), coverLetter (string, under 180 words), questions (array of strings).`;
+Return a single JSON object with keys:
+- summary (string, 2 sentences max),
+- bullets (array of strings, each grounded in resume facts),
+- coverLetter (string, 140 to 180 words, professional warm tone, explicitly connect two or three stated job requirements to real things in the resume, end with a confident closing line),
+- referralMessage (string, 90 to 115 characters including spaces, a polite WhatsApp or LinkedIn note asking an employee for a referral to this specific role, mention one concrete resume fact and the role title, no greetings longer than one word, no fabricated familiarity),
+- questions (array of strings).`;
 
 export async function buildPacket({ job, profile, settings, match }) {
   const llm = llmStatus(settings);
@@ -31,18 +36,34 @@ export async function buildPacket({ job, profile, settings, match }) {
     coverLetter: null,
     summarySuggestion: null,
     bulletSuggestions: [],
+    referralMessage: null,
     questions: [],
     gaps: (match?.missing || []).map((m) => `The description asks for ${m.name} which your resume does not show. Decide whether a genuine example exists or leave the gap visible`),
     answers: [],
     factsLocked: 'Nothing in your original resume file is ever modified. Packets are separate documents.'
   };
 
-  packet.questions.push(profile.minCompLPA ? null : 'Your expected pay is not set anywhere. Decide the number or plan to say "open to discussion"').filter(Boolean);
-  packet.questions.push(profile.noticePeriodDays === null ? 'Confirm your notice period for the form. Your profile says available immediately, verify that still holds' : null).filter(Boolean);
+  if (!profile.minCompLPA) packet.questions.push('Your expected pay is not set anywhere. Decide the number or plan to say "open to discussion"');
+  if (profile.noticePeriodDays === null) packet.questions.push('Confirm your notice period for the form. Your profile says available immediately, verify that still holds');
 
   // Deterministic cover letter from real facts. Always present, AI only refines.
   const projectLines = topProjects.map((p) => `In ${p.name} I ${lowerFirst(p.blurb || 'built a full stack application')}`);
   packet.coverLetter = `Hello,\n\nI am applying for the ${job.title} role at ${job.company?.name || 'your team'}. My foundation is ${((profile.skills || []).slice(0, 4).map((s) => s.name).join(', ')) || 'software development'}, applied through real projects rather than coursework alone.\n\n${projectLines.join('. ')}. These projects taught me the discipline of layered architecture, transactional integrity, and building interfaces people actually use.\n\n${(match?.missing || []).length ? `I noticed the role also touches ${(match?.missing || []).slice(0, 2).map((m) => m.name).join(' and ')}. I am actively strengthening that area and can speak to how I learn new stacks quickly.` : 'My skills map closely to what the role asks for, and I would be glad to walk through the details.'}\n\nI am available to join immediately and based in ${profile.city || 'India'}.\n\nRegards,\n${profile.name || 'Candidate'}`;
+
+  // Deterministic referral note, degrading gracefully through shorter
+  // variants so it never ends mid sentence.
+  const roleShort = String(job.title || 'this role').split(/[,(]/)[0].trim();
+  const hook = topProjects[0]?.name || ((profile.skills || [])[0] || 'my projects');
+  const skillsTwo = ((profile.skills || []).slice(0, 2).map((s) => s.name).join(' and ')) || 'Java';
+  const company = job.company?.name || 'your company';
+  const variants = [
+    `Hi, I built ${hook} in ${skillsTwo}. Could you refer me for ${roleShort} at ${company}? Resume ready.`,
+    `Hi, I built ${hook}. Could you refer me for ${roleShort} at ${company}? Resume ready.`,
+    `Hi, I built ${hook}. Could you refer me for ${roleShort}? Resume ready.`,
+    `Hi, could you refer me for ${roleShort}? Resume ready.`
+  ];
+  packet.referralMessage = variants.find((v) => v.length <= 118) || variants[variants.length - 1];
+  packet.referralChars = packet.referralMessage.length;
 
   if (llm.ready) {
     try {
@@ -57,6 +78,10 @@ export async function buildPacket({ job, profile, settings, match }) {
         packet.summarySuggestion = parsed.summary || null;
         packet.bulletSuggestions = Array.isArray(parsed.bullets) ? parsed.bullets.slice(0, 8) : [];
         packet.coverLetter = parsed.coverLetter;
+        if (typeof parsed.referralMessage === 'string' && parsed.referralMessage.length <= 140) {
+          packet.referralMessage = parsed.referralMessage;
+          packet.referralChars = parsed.referralMessage.length;
+        }
         packet.questions = [...new Set([...(parsed.questions || []), ...packet.questions])].slice(0, 8);
       }
     } catch (err) {

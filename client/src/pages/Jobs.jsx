@@ -271,8 +271,37 @@ function JobDetail({ detail, packet, packetBusy, onPacket, onFeedback, onClose }
             <strong style={{ display: 'flex', gap: 7, alignItems: 'center' }}><ScrollText size={15} color="var(--molten)" /> Application packet</strong>
             {packet.aiUsed ? <Chip tone="violet">AI drafted, resume grounded</Chip> : <Chip tone="cyan">rules drafted</Chip>}
           </div>
-          {packet.summarySuggestion && <p style={{ fontSize: 13, marginTop: 10 }}><strong>Summary idea:</strong> {packet.summarySuggestion}</p>}
-          <p style={{ fontSize: 13, marginTop: 10, whiteSpace: 'pre-wrap', color: 'var(--muted)' }}>{packet.coverLetter}</p>
+
+          {packet.referralMessage && (
+            <div style={{ marginTop: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                <strong style={{ fontSize: 12.5 }}>Referral request message</strong>
+                <span className="mono" style={{ fontSize: 10.5, color: (packet.referralChars || packet.referralMessage.length) <= 120 ? 'var(--green)' : 'var(--amber)' }}>
+                  {packet.referralMessage.length} characters
+                </span>
+              </div>
+              <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border)', borderRadius: 12, padding: '11px 13px', fontSize: 13 }}>
+                {packet.referralMessage}
+              </div>
+              <button className="btn ghost sm" style={{ marginTop: 7 }} onClick={() => { navigator.clipboard.writeText(packet.referralMessage); toast('Referral message copied. Paste it to any employee on LinkedIn or Naukri', 'ok'); }}><Copy size={12} /> Copy referral message</button>
+            </div>
+          )}
+
+          {packet.summarySuggestion && <p style={{ fontSize: 13, marginTop: 14 }}><strong>Summary idea:</strong> {packet.summarySuggestion}</p>}
+
+          <div style={{ marginTop: 14 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+              <strong style={{ fontSize: 12.5 }}>Tailored cover letter</strong>
+              <button className="btn ghost sm" onClick={() => { navigator.clipboard.writeText(packet.coverLetter || ''); toast('Cover letter copied', 'ok'); }}><Copy size={12} /> Copy</button>
+            </div>
+            <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border)', borderRadius: 12, padding: '13px 15px', fontSize: 13, whiteSpace: 'pre-wrap', color: 'var(--text)', lineHeight: 1.65 }}>
+              {packet.coverLetter}
+            </div>
+            <p style={{ fontSize: 10.5, color: 'var(--faint)', marginTop: 6 }}>
+              {packet.aiUsed ? 'Drafted by AI from your resume text and this job description, with a hard rule against inventing anything.' : 'Drafted by the rules engine from real resume facts. Add an AI key for finer wording.'}
+            </p>
+          </div>
+
           {packet.bulletSuggestions?.length > 0 && (
             <>
               <div className="divider" />

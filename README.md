@@ -69,8 +69,11 @@ Cautious, base, and favorable scenarios compute monthly surplus, savings margin,
 ### Honest tracking
 Applications move through a real state machine. Submissions count only with receipt evidence, duplicates are blocked, and pause semantics are real.
 
+### Cover letters, referral messages, and autofill memory
+Forge a packet per role and get a tailored cover letter that reads your resume against the job description, plus a referral request message of about one hundred characters ready to send to any employee at that company on LinkedIn or Naukri. Both are grounded strictly in your resume facts, both copy with one click, and anything your resume cannot support becomes a question instead of an invention. The Helper extension remembers every value it fills, and the saved autofill data is editable in the app under Settings and inside the extension itself, so a wrong value is fixed once and never autofills wrong again.
+
 ### Guided tour with voice
-Press Guided tour in the sidebar. A ten step walkthrough navigates the real product and narrates aloud through your browser's built in speech engine, preferring a soft female voice such as Microsoft Zira or Aria. A speaker icon mutes it. A full narration script for recording your own video lives in docs/WALKTHROUGH.md.
+Press Guided tour in the sidebar. A ten step walkthrough navigates the real product and narrates aloud through your browser's built in speech engine, preferring a soft female voice such as Microsoft Zira or Aria. A speaker icon mutes it. Prefer just listening? A full narrated walkthrough recorded with a soft female voice ships in the repo at `docs/media/jobforge-walkthrough.wav`, and the matching script for recording your own video lives in docs/WALKTHROUGH.md.
 
 ## Quick start (Windows)
 
@@ -92,6 +95,8 @@ Open http://localhost:5173 and either walk the onboarding or, if you are Siddhan
 3. Click the JobForge Helper icon, paste the token, press Pair, then Test connection.
 4. Open any posting on LinkedIn, Naukri, Greenhouse, Lever, Ashby, SmartRecruiters, Workday, or any page with structured job data, and press Send to JobForge on the page. The posting lands in your cockpit scored. On application forms, press Autofill with JobForge and review before you submit.
 
+The helper remembers every value it fills. Your saved autofill data is editable both in the app under Settings, Autofill data, and inside the helper's own options panel, so a wrong value is corrected once and never autofills wrong again. The complete focused manual, including step by step Naukri and LinkedIn application loops, lives in [docs/EXTENSION_GUIDE.md](docs/EXTENSION_GUIDE.md).
+
 ## Using it without a key
 
 Everything except AI word polish works from the first minute: resume parsing, live board discovery, scheduled refresh, closed detection, scam screening, explainable scoring, relocation math, tracker, extension capture, and rules drafted packets. The sidebar shows AI off, rules mode so you always know.
@@ -107,9 +112,11 @@ server/            Express API: parsing, scoring, adapters, refresh, screening, 
   services/        scoring, scam, ats, parser, llm, relocation, tailoring, refresh
   seedRegistry.js  the 21 pre verified genuine boards and URL auto detection
 client/            React 19 + Vite + Tailwind 4 + Framer Motion interface
-extension/         Chrome MV3 helper: capture and autofill, never auto submit
+extension/         Chrome MV3 helper: capture, autofill with memory, never auto submit
 test/              21 acceptance tests covering the hard guarantees
-docs/              capability matrix, walkthrough script
+docs/              capability matrix, extension guide, walkthrough script
+docs/media/        narrated voice walkthrough audio
+tools/             voice generation scripts for regenerating the audio
 ```
 
 ## Scoring weights

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Settings2, Zap, KeyRound, Download, Trash2, ShieldAlert, SlidersHorizontal, Sparkles, Puzzle, Copy, RefreshCw } from 'lucide-react';
+import { Settings2, Zap, KeyRound, Download, Trash2, ShieldAlert, SlidersHorizontal, Sparkles, Puzzle, Copy, RefreshCw, Wand2, Save, RotateCcw } from 'lucide-react';
 import { api } from '../api.js';
 import { useApp } from '../App.jsx';
 import { SectionHead, Chip, Field, Reveal, Spinner, useToast, Toggle, Bar } from '../ui.jsx';
@@ -13,12 +13,15 @@ export default function SettingsPage() {
   const [weights, setWeights] = useState(null);
   const [auto, setAuto] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [fillData, setFillData] = useState({});
+  const [fillFields, setFillFields] = useState({});
 
   useEffect(() => {
     if (!boot) return;
     setLlm(JSON.parse(JSON.stringify(boot.settings.llm || { providerId: 'none', providers: {} })));
     setWeights(boot.profile?.weights || null);
     setAuto(boot.settings.autoSubmit || { enabled: false, maxPerDay: 3 });
+    api('/filldata').then((r) => { setFillData(r.filldata); setFillFields(Object.fromEntries(r.fields.map((f) => [f.id, f.label]))); }).catch(() => {});
   }, [boot]);
 
   if (!llm || !auto) return <div className="shimmer" style={{ height: 300 }} />;
@@ -132,6 +135,35 @@ export default function SettingsPage() {
             <li>Click the JobForge Helper icon, open its options, and paste the token.</li>
             <li>Browse any job posting and press the Send to JobForge button on the page.</li>
           </ol>
+        </div>
+      </Reveal>
+
+      {/* autofill data */}
+      <Reveal>
+        <div className="card" style={{ marginBottom: 18 }}>
+          <div style={{ display: 'flex', gap: 9, alignItems: 'center', marginBottom: 4 }}><Wand2 size={17} color="var(--cyan)" /><h3>Autofill data</h3></div>
+          <p style={{ fontSize: 12.5, color: 'var(--muted)', marginBottom: 14 }}>
+            These are the exact values the Helper extension fills into application forms. Anything saved here overrides profile and answers, so a wrong value gets corrected once and never autofills wrong again. The extension keeps its own editable copy too, and remembers the last values it used.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
+            {Object.entries(fillFields).map(([key, label]) => (
+              <Field key={key} label={label}>
+                {key === 'why'
+                  ? <textarea className="input" rows={3} value={fillData[key] || ''} onChange={(e) => setFillData({ ...fillData, [key]: e.target.value })} />
+                  : <input className="input" value={fillData[key] || ''} onChange={(e) => setFillData({ ...fillData, [key]: e.target.value })} />}
+              </Field>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 12, alignItems: 'center' }}>
+            <button className="btn primary sm" onClick={async () => {
+              try { await api('/filldata', { method: 'PUT', body: fillData }); await refresh(); toast('Autofill data saved. The helper picks it up on its next fill', 'ok'); }
+              catch (e) { toast(e.message, 'err'); }
+            }}><Save size={13} /> Save autofill data</button>
+            <button className="btn ghost sm" onClick={async () => {
+              try { await api('/filldata', { method: 'PUT', body: Object.fromEntries(Object.keys(fillFields).map((k) => [k, ''])) }); const res = await api('/filldata'); setFillData(res.filldata); toast('Overrides cleared. The helper falls back to your profile and approved answers', 'ok'); }
+              catch (e) { toast(e.message, 'err'); }
+            }}><RotateCcw size={13} /> Clear overrides</button>
+          </div>
         </div>
       </Reveal>
 

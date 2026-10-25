@@ -1,10 +1,12 @@
-# JobForge Guided Tour Script
+# JobForge Guided Tour Script and Voice Walkthrough
 
-Two ways to take the tour.
+Three ways to take the tour.
 
-**Inside the app, right now.** Press Guided tour in the sidebar. Ten steps navigate the real product and narrate aloud through your browser's built in speech engine. On Windows the voice is Microsoft Zira or Aria, a calm female voice, with a speaker icon to mute. This is the fastest way to learn the product, and it is also the easiest way to record a video: open the tour, turn the voice on, start a screen recording, and walk through once.
+**Inside the app, right now.** Press Guided tour in the sidebar. The ten step walkthrough navigates the real product and narrates aloud through your browser's speech engine, preferring a soft female voice such as Microsoft Zira or Aria, with a speaker icon to mute.
 
-**Recording your own walkthrough video.** The full narration script below matches the in app tour step for step. Record with the Windows Game Bar (Windows key plus Alt plus R) or OBS Studio, narrate with your own voice or any text to speech tool you like, and keep each screen on view while its section plays.
+**Prefer just listening?** A narrated audio walkthrough recorded with a soft female voice ships inside this repository at `docs/media/jobforge-walkthrough.wav`. Play it while clicking through the app.
+
+**Recording your own video.** The narration script below matches the in app tour step for step. Record with the Windows Game Bar (Windows key plus Alt plus R) or OBS Studio, and keep each screen on view while its section plays.
 
 ---
 
@@ -16,9 +18,9 @@ Welcome to JobForge, your personal job hunt cockpit. This is your Today view, th
 
 This is the opportunity explorer. Only genuine postings live here, pulled straight from employer boards like Zscaler with its Pune engineering center, Databricks, Meesho, OpenAI, and twenty more verified companies. Every role carries a score out of one hundred, built from seven transparent components: skill fit, responsibility fit, experience fit, location fit, pay fit, employer evidence, and freshness. Nothing is a black box. Open any card and you will see exactly why it fits you, what is missing, and whether anything about it looks suspicious.
 
-## Step 3, Packets
+## Step 3, Cover letter and referral message
 
-Inside a job, press Forge application packet. JobForge drafts a cover letter and bullet suggestions grounded strictly in the facts of your own resume, and it lists every question you still need to answer yourself. If your resume does not support a requirement, it says so plainly instead of inventing a line. With an AI key connected the wording becomes sharper, but the truth rules never bend. Employers get the real you, presented better.
+Inside a job, press Forge application packet. With an AI key connected, JobForge writes a tailored cover letter that reads both your resume and this specific job description, connecting real projects to the exact requirements the employer listed. And because so many openings move faster when someone inside vouches for you, the same packet includes a referral request message of about one hundred characters, ready to send to any employee at that company on LinkedIn or Naukri. Both are grounded strictly in your resume facts. If your resume does not support something, the packet says so plainly instead of inventing a line.
 
 ## Step 4, Resume
 
@@ -26,7 +28,7 @@ Your resume, structured and verified. Upload it once and it becomes an editable 
 
 ## Step 5, Sources
 
-Genuine sources, live refresh. Twenty one employer boards ship pre verified, and you can add any Greenhouse, Lever, or Ashby company by simply pasting its careers link. The background scheduler polls every board on a fixed cadence. New postings appear on their own, and when a role vanishes from its official board, it is marked closed only after two consecutive checks confirm it is really gone. If the employer reposts it, it reopens automatically. The app itself never scrapes LinkedIn or Naukri, by design, and the next step shows how those platforms are covered instead.
+Genuine sources, live refresh. Twenty one employer boards ship pre verified, and you can add any Greenhouse, Lever, or Ashby company by simply pasting its careers link. The background scheduler polls every board on a fixed cadence. New postings appear on their own, and when a role vanishes from its official board, it is marked closed only after two consecutive checks confirm it is really gone. If the employer reposts it, it reopens automatically. The app itself never scrapes LinkedIn or Naukri, by design, and the last step shows how those platforms are covered instead.
 
 ## Step 6, Scam Check
 
@@ -42,16 +44,18 @@ Every application, honestly tracked. Applications move through a real state mach
 
 ## Step 9, AI keys
 
-Add an AI brain, or stay free forever. JobForge works completely without any key: matching, scoring, screening, tracking, and packet drafting all run on transparent local rules. When you want finer writing, connect a provider in Settings. The best free choice is Groq: its key is free, its models are fast, and setup takes one minute. The best writing quality is Anthropic Claude, especially Claude Haiku. OpenAI is the solid all round paid option. Keys stay on this machine and travel only to the provider you chose.
+Add an AI brain, or stay free forever. JobForge works completely without any key: matching, scoring, screening, tracking, and packet drafting all run on transparent local rules. When you want finer writing, connect a provider in Settings. The best free choice is Groq: its key is free, its models are fast, and setup takes one minute. The best writing quality is Anthropic Claude, especially Claude Haiku, for cover letters that sound genuinely human. OpenAI is the solid all round paid option. Keys stay on this machine and travel only to the provider you chose.
 
-## Step 10, Browser extension
+## Step 10, Browser extension and autofill memory
 
-Pair the JobForge Helper extension and your LinkedIn and Naukri Premium subscriptions join the team. Copy the token from Settings, load the extension folder into Chrome, and browse exactly as you always do. One click on any posting captures it into this cockpit, scored and scam screened instantly. On application forms, the helper prefills everything you have approved, your contact details, your notice period, your answers. And it never presses submit for you. That final click stays yours, on every platform, always, because protecting your accounts matters more than saving one click. From a new posting appearing to a prepared application in front of you, the whole loop is minutes.
+Pair the JobForge Helper extension and your LinkedIn and Naukri Premium subscriptions join the team. Copy the token from Settings, load the extension folder into Chrome through the extensions page, paste the token, and press pair. From then on, browsing works exactly as always, with one addition: a small button on every posting captures it into this cockpit instantly.
+
+When you reach an application form, the helper prefills your name, contact, links, notice period, and everything you have approved. Here is the part people love: the helper remembers. Every value it fills is stored, every value is editable in its options panel, and any correction you make sticks, so a wrong fill can never repeat. Fix it once here in Settings or in the extension, and every future form is right. And it never presses submit for you. That final click stays yours, on every platform, always, because protecting your accounts matters more than saving one click. From a new posting appearing to a prepared application in front of you, the whole loop is minutes. The complete setup manual lives in docs, Extension Guide.
 
 ## Closing
 
-That is JobForge. Real companies, real openings, explainable scores, scam protection, honest economics, and a tracker that never lies to you. Forge your applications, and land the role.
+That is JobForge. Real companies, real openings, explainable scores, scam protection, honest economics, a tracker that never lies to you, and documents written in your voice. Forge your applications, and land the role.
 
 ---
 
-*Recording notes: 1920 by 1080, dark theme already set, keep the ember animation running for the intro, pause two seconds between steps, and let the in app voice handle narration if you prefer not to record your own.*
+*Recording notes: 1920 by 1080, dark theme already set, keep the ember animation running for the intro, pause two seconds between steps. The shipped audio file uses Microsoft Zira at a slightly reduced rate for a calm delivery.*
