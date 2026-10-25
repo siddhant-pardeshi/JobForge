@@ -94,6 +94,7 @@ function Shell({ children }) {
 export default function App() {
   const [boot, setBoot] = useState(null);
   const [failed, setFailed] = useState(false);
+  const [locked, setLocked] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -104,10 +105,15 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    refresh().catch(() => setFailed(true));
+    refresh().catch((err) => {
+      if (err.status === 401) setLocked(true);
+      else setFailed(true);
+    });
   }, [refresh]);
 
   const onboarded = boot?.profile?.onboarded || boot?.settings?.onboarded;
+
+  if (locked) return <><div className="aurora" /><GateScreen onUnlocked={() => { setLocked(false); refresh().catch((e) => { if (e.status === 401) setLocked(true); else setFailed(true); }); }} /></>;
 
   if (failed) {
     return (
@@ -147,5 +153,45 @@ export default function App() {
         )}
       </ToastProvider>
     </AppCtx.Provider>
+  );
+}
+
+function GateScreen({ onUnlocked }) {
+  const [code, setCode] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+  const submit = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/unlock', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code }) });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error || 'That code is not correct'); setBusy(false); return; }
+      onUnlocked();
+    } catch {
+      setError('Could not reach the server');
+      setBusy(false);
+    }
+  };
+  return (
+    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', position: 'relative', zIndex: 2, padding: 20 }}>
+      <motion.div className="glass" initial={{ opacity: 0, y: 30, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 22 }}
+        style={{ width: 'min(420px, 100%)', padding: 34, borderRadius: 24, textAlign: 'center', background: 'rgba(12,12,20,0.85)' }}>
+        <motion.div className="brand-mark" style={{ width: 64, height: 64, borderRadius: 20, margin: '0 auto 18px' }} animate={{ rotate: [0, -8, 8, 0] }} transition={{ repeat: Infinity, duration: 4 }}>
+          <Flame size={30} color="white" />
+        </motion.div>
+        <h1 style={{ fontSize: 26 }}>Private cockpit</h1>
+        <p style={{ color: 'var(--muted)', fontSize: 13, margin: '10px 0 22px' }}>
+          This JobForge is running in public mode. Enter the access code shown in the terminal of the machine it runs on.
+        </p>
+        <input className="input mono" style={{ textAlign: 'center', fontSize: 20, letterSpacing: '0.3em' }} inputMode="numeric" maxLength={6}
+          value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} placeholder="······"
+          onKeyDown={(e) => { if (e.key === 'Enter' && code.length >= 6) submit(); }} />
+        {error && <p style={{ color: 'var(--red)', fontSize: 12.5, marginTop: 10 }}>{error}</p>}
+        <button className="btn primary" style={{ width: '100%', justifyContent: 'center', marginTop: 16 }} onClick={submit} disabled={busy || code.length < 6}>
+          {busy ? 'Checking...' : 'Unlock'}
+        </button>
+      </motion.div>
+    </div>
   );
 }

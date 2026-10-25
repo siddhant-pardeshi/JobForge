@@ -5,8 +5,11 @@ import { parseCareersUrl, SEED_COMPANIES } from '../server/seedRegistry.js';
 test('careers URLs reveal their provider and handle automatically', () => {
   assert.deepEqual(parseCareersUrl('https://job-boards.greenhouse.io/zscaler'), { atsProvider: 'greenhouse', handle: 'zscaler' });
   assert.deepEqual(parseCareersUrl('https://boards.greenhouse.io/embed/job_board?for=meesho'), { atsProvider: 'greenhouse', handle: 'meesho' });
+  assert.deepEqual(parseCareersUrl('https://job-boards.greenhouse.io/rubrik/jobs/7956920'), { atsProvider: 'greenhouse', handle: 'rubrik' });
   assert.deepEqual(parseCareersUrl('https://jobs.lever.co/meesho'), { atsProvider: 'lever', handle: 'meesho' });
+  assert.deepEqual(parseCareersUrl('https://jobs.lever.co/meesho/senior-engineer-abc123'), { atsProvider: 'lever', handle: 'meesho' });
   assert.deepEqual(parseCareersUrl('https://jobs.ashbyhq.com/openai'), { atsProvider: 'ashby', handle: 'openai' });
+  assert.deepEqual(parseCareersUrl('https://jobs.ashbyhq.com/openai/backend-engineer-x1'), { atsProvider: 'ashby', handle: 'openai' });
   assert.equal(parseCareersUrl('https://careers.somethingelse.com/x').atsProvider, null);
 });
 

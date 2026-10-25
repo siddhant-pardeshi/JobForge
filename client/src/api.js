@@ -6,7 +6,12 @@ export async function api(path, options = {}) {
   });
   let data = null;
   try { data = await res.json(); } catch { /* empty body */ }
-  if (!res.ok) throw new Error(data?.error || `Request failed with HTTP ${res.status}`);
+  if (!res.ok) {
+    const err = new Error(data?.error || `Request failed with HTTP ${res.status}`);
+    err.status = res.status;
+    err.locked = !!data?.locked;
+    throw err;
+  }
   return data;
 }
 

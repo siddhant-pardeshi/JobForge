@@ -44,12 +44,14 @@ export function parseCareersUrl(rawUrl) {
       if (handle) return { atsProvider: 'greenhouse', handle };
     }
     if (host.includes('lever.co') && parts.length) {
-      const handle = [...parts].reverse().find((p) => isNaN(Number(p)));
-      if (handle) return { atsProvider: 'lever', handle };
+      // Pattern: jobs.lever.co/{board} or jobs.lever.co/{board}/{postingId}
+      const handle = parts[0];
+      if (handle && isNaN(Number(handle))) return { atsProvider: 'lever', handle };
     }
     if (host.endsWith('ashbyhq.com') && parts.length) {
-      const handle = [...parts].reverse().find((p) => !/^job-board$/i.test(p));
-      if (handle) return { atsProvider: 'ashby', handle };
+      // Pattern: jobs.ashbyhq.com/{board} or jobs.ashbyhq.com/{board}/{postingId}
+      const handle = parts[0] === 'job-board' ? parts[1] : parts[0];
+      if (handle && isNaN(Number(handle))) return { atsProvider: 'ashby', handle };
     }
     if (host.endsWith('smartrecruiters.com') && parts.length) {
       return { atsProvider: null, handle: parts[0], unsupported: 'SmartRecruiters has no public listing endpoint we can use yet. Capture roles from this page with the browser extension instead.' };

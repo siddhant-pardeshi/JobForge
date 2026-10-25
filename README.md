@@ -97,11 +97,22 @@ Open http://localhost:5173 and either walk the onboarding or, if you are Siddhan
 
 The helper remembers every value it fills. Your saved autofill data is editable both in the app under Settings, Autofill data, and inside the helper's own options panel, so a wrong value is corrected once and never autofills wrong again. The complete focused manual, including step by step Naukri and LinkedIn application loops, lives in [docs/EXTENSION_GUIDE.md](docs/EXTENSION_GUIDE.md).
 
-## Using it without a key
+## Running it on the internet
+
+The cockpit is a personal tool, but sharing it is one command away thanks to public mode:
+
+1. `npm run build` then `npm start`, and flip public mode on by setting `"publicMode": true` inside `server/data/settings.json` (or start with `JOBFORGE_PUBLIC=1`). The server prints a six digit access code in the terminal.
+2. Expose it with any HTTPS tunnel, for example cloudflared: `cloudflared tunnel --url http://localhost:8787`.
+3. Share the resulting URL. Visitors meet a lock screen and must enter the access code; a correct entry unlocks that browser for thirty days.
+4. You on the host machine never see the lock screen, and the browser helper authenticates through its own pairing token.
+
+The gate is deliberately simple and honest: the access code is the only secret, the cookie is HttpOnly and Secure on HTTPS, and every endpoint including exports sits behind it. If you need to revoke access, change the code in settings and restart. For a permanently deployed instance, run the same server on any small VPS behind a reverse proxy with HTTPS.
+
+## Running it without a key
 
 Everything except AI word polish works from the first minute: resume parsing, live board discovery, scheduled refresh, closed detection, scam screening, explainable scoring, relocation math, tracker, extension capture, and rules drafted packets. The sidebar shows AI off, rules mode so you always know.
 
-## Using it with a key
+## Running it with a key
 
 Add the key in Settings, press Test, and the sidebar dot turns green with the model name. From then on, forged packets include an AI drafted summary, bullets, and a cover letter grounded strictly in your resume text, plus a questions list for anything the resume cannot honestly support. Every AI output is labeled as such, and a provider failure falls back to the rules draft with a notice.
 

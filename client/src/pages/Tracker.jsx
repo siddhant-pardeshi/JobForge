@@ -81,6 +81,9 @@ export default function Tracker() {
   if (!data) return <div className="shimmer" style={{ height: 300 }} />;
   const { applications, transitions } = data;
   const closed = applications.filter((a) => CLOSED_STATES.includes(a.state));
+  // The modal always shows the live record from the latest sync, never a
+  // stale snapshot taken when the card was clicked.
+  const openApp = open ? applications.find((a) => a.id === open.id) || null : null;
 
   return (
     <div>
@@ -146,8 +149,8 @@ export default function Tracker() {
         </Reveal>
       )}
 
-      <Modal open={!!open} onClose={() => setOpen(null)} wide>
-        {open && <AppDetail app={open} data={data} onMove={move} onReceipt={confirmReceipt} onChange={load} />}
+      <Modal open={!!openApp} onClose={() => setOpen(null)} wide>
+        {openApp && <AppDetail app={openApp} data={data} onMove={move} onReceipt={confirmReceipt} onChange={load} />}
       </Modal>
     </div>
   );

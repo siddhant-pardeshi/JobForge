@@ -44,7 +44,19 @@ function maskSettings(settings) {
 const scoreCache = new Map();
 function profileSignature(profile) {
   if (!profile) return 'noprofile';
-  return [profile.extractedAt, JSON.stringify(profile.weights), (profile.skills || []).length, (profile.resumeText || '').length, JSON.stringify(profile.roleFamilies)].join('~');
+  // Anything that changes how a job scores must change this signature, or the
+  // cache would serve stale ranks after an edit.
+  return JSON.stringify([
+    profile.extractedAt,
+    profile.weights,
+    (profile.skills || []).map((s) => s.name),
+    profile.roleFamilies,
+    profile.targetLocations,
+    profile.city,
+    profile.minCompLPA,
+    profile.noticePeriodDays,
+    (profile.resumeText || '').length
+  ]);
 }
 
 function assembleJobs() {
@@ -136,6 +148,8 @@ router.put('/profile', ah(async (req, res) => {
   if (!incoming.weights) incoming.weights = existing?.weights || undefined;
   incoming.onboarded = true;
   save('profile', incoming);
+  scoreCache.clear();
+  warmScores();
   res.json({ ok: true, profile: incoming });
 }));
 

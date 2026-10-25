@@ -63,6 +63,7 @@ export const DEFAULT_SETTINGS = {
   relocation: { policy: { minSurplusMonthly: null, minImprovementOverPune: null, maxUpfrontCash: null }, budgets: DEFAULT_BUDGETS, netRate: 0.8, targetMonthlySavings: null },
   refresh: { auto: true, intervalMinutes: 20, runOnStart: true },
   extensionToken: null,
+  accessCode: null,
   onboarded: false
 };
 
@@ -91,6 +92,12 @@ export function bootstrap() {
   // Issue the extension token once so the browser extension can pair safely.
   if (!settings.extensionToken) {
     settings.extensionToken = `jf_${crypto.randomBytes(16).toString('hex')}`;
+    save('settings', settings);
+  }
+  // Access code for public exposure. Required by tunnel visitors, never
+  // required for the owner working on this machine.
+  if (!settings.accessCode) {
+    settings.accessCode = String(100000 + crypto.randomBytes(4).readUInt32BE(0) % 900000);
     save('settings', settings);
   }
   if (!load('answers')) save('answers', DEFAULT_ANSWERS);
