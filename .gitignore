@@ -1,0 +1,20 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+
+# private runtime data: your resume, extracted profile, api keys, tracked jobs
+server/data/
+
+# environment
+.env
+.env.local
+
+# logs and OS noise
+*.log
+.DS_Store
+Thumbs.db
+
+# private working brief, not part of the project
+ZAI_TECH_JOB_ASSISTANT_SUPER_PROMPT.txt

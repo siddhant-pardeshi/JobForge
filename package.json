@@ -1,0 +1,36 @@
+{
+  "name": "jobforge",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "AI powered job hunt cockpit that finds verified tech roles, scores every opening with explainable matching, screens recruitment scams and tracks every application",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n server,client -c magenta,cyan \"node --watch server/index.js\" \"vite\"",
+    "dev:server": "node --watch server/index.js",
+    "dev:client": "vite",
+    "build": "vite build",
+    "start": "node server/index.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "mammoth": "^1.9.0",
+    "multer": "^2.0.1",
+    "pdf-parse": "^1.1.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.11",
+    "@vitejs/plugin-react": "^5.0.0",
+    "concurrently": "^9.1.2",
+    "framer-motion": "^12.0.0",
+    "lucide-react": "^0.454.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.1.0",
+    "tailwindcss": "^4.1.11",
+    "vite": "^7.1.0"
+  }
+}
