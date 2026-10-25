@@ -206,9 +206,9 @@ function JobDetail({ detail, packet, packetBusy, onPacket, onFeedback, onClose }
       {m && (
         <>
           <h3 style={{ fontSize: 13, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--faint)', margin: '20px 0 12px' }}>Score breakdown</h3>
-          <div style={{ display: 'flex', gap: 18, alignItems: 'center', marginBottom: 16 }}>
+          <div style={{ display: 'flex', gap: 18, alignItems: 'center', marginBottom: 16, flexWrap: 'wrap' }}>
             {m.components.map((c, i) => (
-              <div key={c.id} style={{ flex: 1, minWidth: 130 }}>
+              <div key={c.id} style={{ flex: '1 1 150px', minWidth: 140 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, marginBottom: 4 }}>
                   <span style={{ color: 'var(--muted)' }}>{c.label}</span>
                   <span className="mono" style={{ color: 'var(--molten)' }}>{c.earned}/{c.weight}</span>
@@ -236,7 +236,7 @@ function JobDetail({ detail, packet, packetBusy, onPacket, onFeedback, onClose }
         </>
       )}
 
-      {job.bond && job.bond.status !== 'no_evidence' && (
+      {job.bond && ['employer_confirmed', 'candidate_reported', 'conflicting'].includes(job.bond.status) && (
         <div className="card" style={{ borderColor: 'rgba(251,191,36,0.5)', background: 'rgba(251,191,36,0.06)', marginTop: 16 }}>
           <strong style={{ color: '#ffd884', display: 'flex', gap: 7, alignItems: 'center' }}><ScrollText size={15} /> Service terms reported: {job.bond.status.replace(/_/g, ' ')}</strong>
           <ul style={{ margin: '8px 0 0', paddingLeft: 18, fontSize: 12.5, color: 'var(--muted)' }}>
