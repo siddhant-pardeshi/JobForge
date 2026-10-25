@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>JobForge Field Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  @page { size: 210mm 297mm; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #08080f; }
+  body { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; color: #f5f3ef; font-size: 10.2pt; line-height: 1.52; }
+  :root {
+    --bg: #0a0a14; --panel: #11112033; --panel2: #12121f; --line: rgba(255,255,255,0.10);
+    --mut: #a8a3b5; --faint: #8b8496;
+    --o: #ff5c1a; --p: #ff2e88; --v: #8b5cf6;
+    --cy: #22d3ee; --gr: #34d399; --am: #fbbf24; --rd: #fb7c7c;
+    --grad: linear-gradient(120deg, #ff5c1a, #ff2e88 55%, #8b5cf6);
+  }
+  .page {
+    width: 210mm; height: 297mm; page-break-after: always; position: relative;
+    display: flex; flex-direction: column;
+    background:
+      radial-gradient(120mm 80mm at 85% -6%, rgba(139,92,246,0.14), transparent 70%),
+      radial-gradient(110mm 75mm at 6% 104%, rgba(255,92,26,0.12), transparent 70%),
+      #0a0a14;
+    padding: 13mm 15mm 16mm;
+  }
+  .page.last { page-break-after: auto; }
+  @media screen {
+    html { background: #08080f; }
+    body { transform: scale(0.72); transform-origin: top center; }
+  }
+  h1, h2, h3, h4 { font-family: 'Space Grotesk', 'Inter', sans-serif; margin: 0; }
+  .mono { font-family: 'JetBrains Mono', 'Consolas', monospace; }
+  .gtext { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .kicker { font-size: 8pt; font-weight: 700; letter-spacing: 0.24em; text-transform: uppercase; color: var(--o); }
+  .phead { display: flex; align-items: center; gap: 5mm; margin-bottom: 6mm; }
+  .pnum { width: 12mm; height: 12mm; border-radius: 3.4mm; background: var(--grad); display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14pt; color: #fff; flex-shrink: 0; }
+  .phead .t h2 { font-size: 16.5pt; letter-spacing: -0.01em; }
+  .phead .t .k { font-size: 7.6pt; letter-spacing: 0.22em; text-transform: uppercase; color: var(--faint); font-weight: 600; }
+  .foot { margin-top: auto; display: flex; justify-content: space-between; font-size: 7.4pt; color: var(--faint); border-top: 0.4pt solid var(--line); padding-top: 2.6mm; }
+  .foot b { color: var(--mut); font-weight: 600; }
+  p { margin: 0 0 2.6mm; }
+  .lead { font-size: 10.8pt; color: #d8d4e2; }
+  .mut { color: var(--mut); } .faint { color: var(--faint); }
+  .cols2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; }
+  .cols3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5mm; }
+  .card { background: var(--panel2); border: 0.5pt solid var(--line); border-radius: 3mm; padding: 4.2mm 4.6mm; }
+  .card h4 { font-size: 10pt; margin-bottom: 1.6mm; }
+  .card p { font-size: 8.8pt; color: var(--mut); margin: 0; }
+  .step { display: flex; gap: 3.6mm; margin-bottom: 3.4mm; }
+  .step .n { width: 6.4mm; height: 6.4mm; border-radius: 50%; background: var(--grad); color: #fff; font-weight: 700; font-size: 8.6pt; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 0.4mm; }
+  .step .b { flex: 1; }
+  .step .b b { font-size: 9.8pt; }
+  .step .b p { font-size: 8.9pt; color: var(--mut); margin: 0.6mm 0 0; }
+  .code { font-family: 'JetBrains Mono', 'Consolas', monospace; background: #0c0c18; border: 0.5pt solid var(--line); border-left: 2.4pt solid #ff5c1a; border-radius: 2mm; padding: 2.8mm 3.6mm; font-size: 8.6pt; color: #ffd9c2; margin: 1.8mm 0 3mm; white-space: pre-wrap; word-break: break-word; }
+  .callout { background: rgba(255,92,26,0.08); border: 0.5pt solid rgba(255,92,26,0.35); border-radius: 2.6mm; padding: 3.2mm 4mm; font-size: 8.9pt; color: #ecd9e6; margin: 2.6mm 0; }
+  .callout b { color: #ffb28a; }
+  .callout.cy { background: rgba(34,211,238,0.07); border-color: rgba(34,211,238,0.35); } .callout.cy b { color: #8ce8f7; }
+  .callout.gr { background: rgba(52,211,153,0.07); border-color: rgba(52,211,153,0.35); } .callout.gr b { color: #8af0c8; }
+  .tbl { width: 100%; border-collapse: collapse; font-size: 8.8pt; margin: 2.4mm 0 3mm; }
+  .tbl th { text-align: left; font-size: 7.6pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); padding: 2mm 2.4mm; border-bottom: 0.6pt solid var(--line); font-weight: 700; }
+  .tbl td { padding: 2.2mm 2.4mm; border-bottom: 0.4pt solid rgba(255,255,255,0.06); vertical-align: top; color: #d8d4e2; }
+  .tbl tr td:first-child { color: #f5f3ef; font-weight: 600; }
+  .chip { display: inline-block; padding: 0.8mm 2.6mm; border-radius: 99mm; font-size: 7.6pt; font-weight: 600; border: 0.5pt solid; }
+  .chip.o { color: #ffb28a; border-color: rgba(255,92,26,0.5); background: rgba(255,92,26,0.09); }
+  .chip.g { color: #8af0c8; border-color: rgba(52,211,153,0.45); background: rgba(52,211,153,0.08); }
+  .chip.v { color: #c9b4ff; border-color: rgba(139,92,246,0.5); background: rgba(139,92,246,0.1); }
+  .chip.c { color: #8ce8f7; border-color: rgba(34,211,238,0.45); background: rgba(34,211,238,0.08); }
+  .chip.a { color: #ffd884; border-color: rgba(251,191,36,0.45); background: rgba(251,191,36,0.08); }
+  .chip.r { color: #ffa2a2; border-color: rgba(251,77,77,0.5); background: rgba(251,77,77,0.1); }
+  .hr { height: 0.5pt; background: var(--line); margin: 4mm 0; }
+  ul.tight { margin: 1mm 0 2.6mm; padding-left: 4.6mm; }
+  ul.tight li { margin-bottom: 1.4mm; font-size: 9.2pt; color: #d8d4e2; }
+  ul.tight li b { color: #f5f3ef; }
+  .big { font-family: 'Space Grotesk', 'Inter', sans-serif; font-size: 13pt; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- ============ PAGE 1 COVER ============ -->
+<div class="page" style="padding: 0;">
+  <div style="position: absolute; inset: 0; background:
+    radial-gradient(160mm 110mm at 78% 8%, rgba(139,92,246,0.20), transparent 70%),
+    radial-gradient(150mm 100mm at 12% 96%, rgba(255,92,26,0.18), transparent 70%),
+    radial-gradient(120mm 90mm at 50% 118%, rgba(255,46,136,0.14), transparent 70%);"></div>
+  <div style="position: absolute; left: 18mm; right: 18mm; top: 20mm; height: 0.6pt; background: linear-gradient(90deg, transparent, rgba(255,92,26,0.55), transparent);"></div>
+  <div style="position: relative; height: 100%; padding: 24mm 20mm;">
+    <div style="display: flex; align-items: center; gap: 5mm;">
+      <div style="width: 15mm; height: 15mm; border-radius: 4.4mm; background: var(--grad); display: flex; align-items: center; justify-content: center;">
+        <svg width="8.4mm" height="8.4mm" viewBox="0 0 32 32"><path d="M16 4 C21 12 26 15 26 21.5 C26 26.5 21.5 29 16 29 C10.5 29 6 26.5 6 21.5 C6 16.5 12 14 13.5 9.5 C14.8 12.6 17.5 13 16 4 Z" fill="#07070c"/></svg>
+      </div>
+      <div>
+        <div style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size: 15pt; letter-spacing: -0.01em;">Job<span class="gtext">Forge</span></div>
+        <div style="font-size: 7.4pt; letter-spacing: 0.3em; text-transform: uppercase; color: var(--faint);">Hunt smarter</div>
+      </div>
+    </div>
+
+    <div style="margin-top: 34mm;">
+      <div class="kicker" style="margin-bottom: 6mm;">The complete field guide</div>
+      <div style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size: 42pt; line-height: 1.06; letter-spacing: -0.02em;">
+        Run it. Master it.<br/><span class="gtext">Land the job.</span>
+      </div>
+      <p class="lead" style="margin-top: 8mm; max-width: 128mm; font-size: 11.6pt; color: #cfc9dd;">
+        Step by step instructions to install JobForge, load your resume, work the boards,
+        screen fraud, wire an AI key, pair the Chrome helper, and run a daily routine
+        that produces quality applications in minutes a day.
+      </p>
+    </div>
+
+    <div style="margin-top: 18mm; display: flex; gap: 3mm; flex-wrap: wrap;">
+      <span class="chip o">21 verified employer boards</span>
+      <span class="chip c">mail fraud screening</span>
+      <span class="chip v">self organizing tracker</span>
+      <span class="chip g">works with zero API keys</span>
+      <span class="chip a">Chrome helper included</span>
+    </div>
+
+    <div style="position: absolute; left: 20mm; right: 20mm; bottom: 22mm; display: flex; justify-content: space-between; align-items: flex-end;">
+      <div style="font-size: 8.6pt; color: var(--faint);" class="mono">github.com/siddhant-pardeshi/JobForge</div>
+      <div style="font-size: 8.6pt; color: var(--faint);">Version 1.3 · October 2026 · MIT licensed</div>
+    </div>
+    <div style="position: absolute; left: 18mm; right: 18mm; bottom: 14mm; height: 0.6pt; background: linear-gradient(90deg, transparent, rgba(139,92,246,0.5), transparent);"></div>
+  </div>
+</div>
+
+<!-- ============ PAGE 2 WHAT + CONTENTS ============ -->
+<div class="page">
+  <div class="phead">
+    <div class="pnum">01</div>
+    <div class="t"><div class="k">Orientation</div><h2>What JobForge does for you</h2></div>
+  </div>
+  <p class="lead">JobForge is a job hunt cockpit that runs on your own machine. It watches real employer
+  career boards, scores every opening against your actual resume, screens recruitment fraud, drafts
+  your documents, and keeps the pipeline organized. You stay in control of every submission.</p>
+  <div class="cols3" style="margin: 5mm 0;">
+    <div class="card"><h4 class="gtext">Real openings only</h4><p>5,700 plus live postings from 21 boards verified against their official endpoints: Zscaler Pune, Databricks, Meesho, Rubrik, Okta, Stripe, GitLab, Figma, MongoDB, OpenAI and more.</p></div>
+    <div class="card"><h4 class="gtext">Scores that explain themselves</h4><p>Seven weighted components per job, every matched and missing skill visible, every exclusion kept in its lane where you can audit it.</p></div>
+    <div class="card"><h4 class="gtext">Fraud screened</h4><p>Fee demands, UPI traps, fake sender domains, lying link text. One click inside Gmail and Outlook tells you if a mail is safe to answer.</p></div>
+    <div class="card"><h4 class="gtext">Documents grounded in truth</h4><p>Cover letters built from your resume against each job description, plus a 100 character referral note ready to send to anyone at the company.</p></div>
+    <div class="card"><h4 class="gtext">A board that organizes itself</h4><p>Forge a packet, the card moves. Schedule a round, it moves and reminds you an hour before. Attach a receipt, the submission counts.</p></div>
+    <div class="card"><h4 class="gtext">Free, private, yours</h4><p>Runs locally. Resume and keys never leave your machine. Works fully without any AI key. MIT licensed, forever.</p></div>
+  </div>
+  <div class="hr"></div>
+  <div class="kicker" style="margin-bottom: 3mm;">How this guide is organized</div>
+  <table class="tbl">
+    <tr><td style="width:16mm;" class="mono">02</td><td>Run it: install, first launch, the two commands</td><td style="width:16mm;" class="mono">08</td><td>Relocation math and the tracker</td></tr>
+    <tr><td class="mono">03</td><td>Load your resume the right way</td><td class="mono">09</td><td>AI keys: where to get each one, how to wire it</td></tr>
+    <tr><td class="mono">04</td><td>Read the Today dashboard</td><td class="mono">10</td><td>The Chrome helper: capture, autofill, mail check</td></tr>
+    <tr><td class="mono">05</td><td>Work the Jobs explorer</td><td class="mono">11</td><td>The daily power routine</td></tr>
+    <tr><td class="mono">06</td><td>Forge packets: letters and referrals</td><td class="mono">12</td><td>Pro moves and efficiency tips</td></tr>
+    <tr><td class="mono">07</td><td>Sources and live refresh</td><td class="mono">13</td><td>Hosting, the access switch, troubleshooting</td></tr>
+  </table>
+  <div class="callout"><b>Time budget.</b> Setup takes ten minutes. The daily routine in part 11 takes
+  under an hour and produces ten to fifteen reviewed, tailored, tracked applications. Everything else
+  in this guide exists to make that hour count.</div>
+  <div class="foot"><span><b>JobForge Field Guide</b> · Orientation</span><span>2</span></div>
+</div>
+
+<!-- ============ PAGE 3 RUN IT ============ -->
+<div class="page">
+  <div class="phead">
+    <div class="pnum">02</div>
+    <div class="t"><div class="k">Part 2 · Setup</div><h2>Run it on Windows</h2></div>
+  </div>
+  <div class="step"><div class="n">1</div><div class="b"><b>Install Node.js 20 or newer</b><p>Download the LTS installer from nodejs.org and run it. Verify in a terminal:</p></div></div>
+  <div class="code">node --version    # expect v20.x or v22.x</div>
+  <div class="step"><div class="n">2</div><div class="b"><b>Get the project</b><p>Clone it, or download the ZIP from GitHub and extract it.</p></div></div>
+  <div class="code">git clone https://github.com/siddhant-pardeshi/JobForge.git
+cd JobForge</div>
+  <div class="step"><div class="n">3</div><div class="b"><b>Install dependencies</b><p>One command, about thirty seconds. Nothing else to configure.</p></div></div>
+  <div class="code">npm install</div>
+  <div class="step"><div class="n">4</div><div class="b"><b>Start it</b><p>Two processes start together: the engine on port 8787 and the interface on 5173.</p></div></div>
+  <div class="code">npm run dev</div>
+  <div class="step"><div class="n">5</div><div class="b"><b>Open the cockpit</b><p>Go to http://localhost:5173. On first launch the onboarding wizard walks you through
+  uploading a resume, your target locations, and the optional AI key. The 21 boards in the registry
+  seed themselves and the first refresh starts within seconds.</p></div></div>
+  <div class="hr"></div>
+  <div class="cols2">
+    <div>
+      <div class="kicker" style="margin-bottom: 2mm;">Prefer one process?</div>
+      <div class="code">npm run build
+npm start</div>
+      <p class="mut" style="font-size: 8.8pt;">Then use http://localhost:8787 only. Same app, single terminal, ideal for daily use.</p>
+    </div>
+    <div>
+      <div class="kicker" style="margin-bottom: 2mm;">Verify the install</div>
+      <ul class="tight">
+        <li><b>npm test</b> prints 30 passing tests</li>
+        <li>Sidebar shows <b>21 live sources</b></li>
+        <li>Jobs page fills within a minute of first launch</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout"><b>First load is the slow one.</b> Scoring 5,700 jobs takes up to a minute after a
+  fresh start. Every load after that is instant. If the board looks empty, give it one minute, it is working.</div>
+  <div class="foot"><span><b>JobForge Field Guide</b> · Setup</span><span>3</span></div>
+</div>
+
+<!-- ============ PAGE 4 RESUME ============ -->
+<div class="page">
+  <div class="phead">
+    <div class="pnum">03</div>
+    <div class="t"><div class="k">Part 3 · Foundation</div><h2>Load your resume the right way</h2></div>
+  </div>
+  <p class="lead">Everything in JobForge reads from one verified profile. Ten careful minutes here
+  upgrades every score, packet and referral note the engine will ever produce for you.</p>
+  <div class="step"><div class="n">1</div><div class="b"><b>Upload</b><p>Resume page, drop your PDF or DOCX. Parsing happens on your machine. Scanned PDFs are
+  detected and reported, never guessed at. A paste box is there if your file is awkward.</p></div></div>
+  <div class="step"><div class="n">2</div><div class="b"><b>Review the confidence chips</b><p>Each extracted fact carries a confidence level. Fix anything marked medium or low while
+  the original file is still fresh in your head.</p></div></div>
+  <div class="step"><div class="n">3</div><div class="b"><b>Correct the skill list</b><p>Remove anything stale with one click on its chip. Add missing skills by typing and pressing
+  Enter. Skills drive 30 points of every match score, so this list is the highest leverage edit in the app.</p></div></div>
+  <div class="step"><div class="n">4</div><div class="b"><b>Set your role families</b><p>Pick the families your resume actually supports: backend, fullstack, frontend, QA, data, cloud
+  and so on. This drives the responsibility component, 20 more points.</p></div></div>
+  <div class="step"><div class="n">5</div><div class="b"><b>Save and watch the board move</b><p>Saving re ranks every job instantly. Add a skill the boards ask for and watch roles jump lanes.</p></div></div>
+  <div class="hr"></div>
+  <div class="cols2">
+    <div class="callout gr" style="margin:0;"><b>Do this now.</b> Put your LinkedIn and GitHub links into
+    the profile. The referral messages and autofill both use them.</div>
+    <div class="callout" style="margin:0;"><b>Minimum pay field.</b> Leave it empty if undecided. An empty
+    floor keeps suitable roles visible instead of burying them over pay the posting never listed.</div>
+  </div>
+  <div class="foot"><span><b>JobForge Field Guide</b> · Foundation</span><span>4</span></div>
+</div>
+
+<!-- ============ PAGE 5 TODAY ============ -->
+<div class="page">
+  <div class="phead">
+    <div class="pnum">04</div>
+    <div class="t"><div class="k">Part 4 · Daily command</div><h2>Read the Today dashboard</h2></div>
+  </div>
+  <p class="lead">Today is mission control. Learn its six zones once and your daily scan takes two minutes.</p>
+  <table class="tbl">
+    <tr><th style="width:34mm;">Zone</th><th>What it tells you</th><th style="width:44mm;">Power move</th></tr>
+    <tr><td>Counters</td><td>Live opportunities, your top score, tracker size, closing deadlines</td><td>A falling top score means fresh matches are thin, time to add boards</td></tr>
+    <tr><td>Hunt deck</td><td>Top four roles across verified lanes</td><td>Open each one, shortlist or skip, never leave a card undecided</td></tr>
+    <tr><td>Deadline radar</td><td>Postings closing soonest with days left</td><td>Anything under 3 days gets applied today or skipped honestly</td></tr>
+    <tr><td>Needs decision</td><td>Ambiguous roles the classifier refuses to guess on</td><td>Glance and decide, your call teaches the lane</td></tr>
+    <tr><td>Round radar</td><td>Scheduled interviews with live countdowns</td><td>Browser reminders fire an hour before, keep the tab open</td></tr>
+    <tr><td>Source health</td><td>Which boards answered the last refresh</td><td>A red source gets a probe from the Sources page</td></tr>
+  </table>
+  <div class="hr"></div>
+  <div class="cols2">
+    <div class="card"><h4>The funnel card</h4><p>Applications grouped by stage. If shortlisted is fat and submitted is thin, the bottleneck is
+    you, and the routine in part 11 is the fix.</p></div>
+    <div class="card"><h4>Guided tour</h4><p>Sidebar button, ten steps, narrated aloud. Replay it anytime you want a refresher on any feature.</p></div>
+  </div>
+  <div class="callout cy"><b>Notifications.</b> Allow notifications when the browser asks. That is the
+  interview reminder system. It only fires once per round, one hour before.</div>
+  <div class="foot"><span><b>JobForge Field Guide</b> · Daily command</span><span>5</span></div>
+</div>
+
+<!-- ============ PAGE 6 JOBS ============ -->
+<div class="page">
+  <div class="phead">
+    <div class="pnum">05</div>
+    <div class="t"><div class="k">Part 5 · The hunt</div><h2>Work the Jobs explorer</h2></div>
+  </div>
+  <div class="cols2">
+    <div>
+      <div class="kicker" style="margin-bottom: 2.4mm;">Lanes, decoded</div>
+      <ul class="tight">
+        <li><span class="chip g">Best in Pune</span>&nbsp; local roles, your primary lane</li>
+        <li><span class="chip c">Remote from Pune</span>&nbsp; India eligible remote, verify per posting</li>
+        <li><span class="chip v">Relocation</span>&nbsp; India roles worth it only if pay clears policy</li>
+        <li><span class="chip a">Needs verification</span>&nbsp; ambiguous, read before trusting</li>
+        <li><span class="chip r">Filtered out</span>&nbsp; nontech or outside India, reason shown on every card</li>
+        <li><span class="chip r">Closed</span>&nbsp; left the official board, reopened automatically if reposted</li>
+      </ul>
+    </div>
+    <div>
+      <div class="kicker" style="margin-bottom: 2.4mm;">Score anatomy, 100 points</div>
+      <table class="tbl">
+        <tr><td>Skill fit</td><td style="text-align:right;">30</td></tr>
+        <tr><td>Responsibility fit</td><td style="text-align:right;">20</td></tr>
+        <tr><td>Experience fit</td><td style="text-align:right;">15</td></tr>
+        <tr><td>Location fit</td><td style="text-align-right;">15</td></tr>
+        <tr><td>Pay fit</td><td style="text-align:right;">10</td></tr>
+        <tr><td>Evidence + freshness</td><td style="text-align:right;">10</td></tr>
+      </table>
+      <p class="mut" style="font-size: 8.6pt;">Open a card to see every component bar, matched skills, gaps and unknowns.</p>
+    </div>
+  </div>
+  <div class="hr"></div>
+  <div class="step"><div class="n">1</div><div class="b"><b>Filter with intent</b><p>Work Best in Pune first, then Remote. Raise the minimum score slider to 60 to cut noise.
+  Search matches title, company and city.</p></div></div>
+  <div class="step"><div class="n">2</div><div class="b"><b>Read before you trust</b><p>Each card lists why it fits and what is missing. Gaps are opportunities to prepare an honest
+  answer, not disqualifiers.</p></div></div>
+  <div class="step"><div class="n">3</div><div class="b"><b>Capture from anywhere</b><p>Postings from LinkedIn, Naukri or any site land here through the helper extension, or paste
+  them into Import a job. Imports get scam screened on arrival.</p></div></div>
+  <div class="callout"><b>Boolean strings.</b> Scroll the Jobs page for ready made search strings for your
+  LinkedIn and Naukri subscriptions. Copy, paste into their keyword boxes, done.</div>
+  <div class="foot"><span><b>JobForge Field Guide</b> · The hunt</span><span>6</span></div>
+</div>
+
+<!-- ============ PAGE 7 PACKETS ============ -->
+<div class="page">
+  <div class="phead">
+    <div class="pnum">06</div>
+    <div class="t"><div class="k">Part 6 · Documents</div><h2>Forge packets: letters and referrals</h2></div>
+  </div>
+  <p class="lead">Open a role, press <b>Forge application packet</b>. Ten seconds later you hold three
+  weapons and a checklist. The card also lands itself on your tracker at Preparing.</p>
+  <div class="cols3">
+    <div class="card"><h4 class="gtext">Tailored cover letter</h4><p>Written from your resume against this specific description. Connects your real projects to the
+    requirements the employer listed. Copy button on top.</p></div>
+    <div class="card"><h4 class="gtext">Referral message</h4><p>About 100 characters, mentions one concrete project and the role title. Character count shown
+    live. Copy and send to anyone at the company.</p></div>
+    <div class="card"><h4 class="gtext">Questions list</h4><p>Everything the resume cannot answer: expected pay, screening specifics. Answer these before
+    submitting, never after.</p></div>
+  </div>
+  <div class="hr"></div>
+  <div class="kicker" style="margin-bottom: 2.4mm;">Rules the engine enforces on itself</div>
+  <ul class="tight">
+    <li><b>Nothing is invented.</b> No fake employers, metrics, dates or skills. Ever.</li>
+    <li><b>Gaps stay gaps.</b> If the description wants Redis and you never touched it, the packet says
+    so and hands you a talking point instead of a lie.</li>
+    <li><b>With or without AI.</b> No key gives you solid rules drafted documents. A key gives sharper
+    wording. Same truth rules either way.</li>
+  </ul>
+  <div class="callout gr"><b>Referral math.</b> Referred applications convert several times better than cold
+  applies. Send the referral message to one real person per company before you submit anything cold.
+  Search the company name plus the role on LinkedIn to find them.</div>
+  <div class="foot"><span><b>JobForge Field Guide</b> · Documents</span><span>7</span></div>
+</div>
+
+<!-- ============ PAGE 8 SOURCES + CLOSED ============ -->
+<div class="page">
+  <div class="phead">
+    <div class="pnum">07</div>
+    <div class="t"><div class="k">Part 7 · Supply</div><h2>Sources and live refresh</h2></div>
+  </div>
+  <p class="lead">Every posting arrives from an official board endpoint. The registry ships with 21
+  verified employers and grows whenever you paste a careers URL.</p>
+  <div class="step"><div class="n">1</div><div class="b"><b>Add any company in 20 seconds</b><p>Add a source, paste the careers page URL, for example job-boards.greenhouse.io/zscaler or
+  jobs.lever.co/meesho. Provider and board handle are detected, the board is probed live before
+  saving. Greenhouse, Lever and Ashby pages all work.</p></div></div>
+  <div class="step"><div class="n">2</div><div class="b"><b>Let the scheduler work</b><p>Every board is polled on the interval you set, 20 minutes by default. Toggle it, change the
+  number, or hit Refresh all now. New postings appear on their own.</p></div></div>
+  <div class="step"><div class="n">3</div><div class="b"><b>Trust the closed lane</b><p>A role is marked closed only after two consecutive refreshes miss it, so a board glitch never
+  fakes a closure. Reposts reopen automatically. The Open and Closed counters per source keep
+  everyone honest.</p></div></div>
+  <div class="hr"></div>
+  <div class="cols2">
+    <div class="card"><h4>Why no LinkedIn or Naukri here</h4><p>Their terms prohibit automated access and the penalty lands on your account. JobForge never
+  scrapes them. The helper extension covers both through capture while you browse.</p></div>
+    <div class="card"><h4>Health at a glance</h4><p>The refresh log lists every run with what changed. A failing source shows its error. Zero
+  jobs and cannot check are always shown as different facts.</p></div>
+  </div>
+  <div class="callout"><b>Grow your coverage.</b> Ten minutes of pasting careers URLs from companies you
+  admire typically adds five to ten boards. Every added board compounds into the daily refresh.</div>
+  <div class="foot"><span><b>JobForge Field Guide</b> · Supply</span><span>8</span></div>
+</div>
+
+<!-- ============ PAGE 9 SCAM ============ -->
+<div class="page">
+  <div class="phead">
+    <div class="pnum">08</div>
+    <div class="t"><div class="k">Part 8 · Defense</div><h2>Scam screening and mail fraud</h2></div>
+  </div>
+  <p class="lead">Recruitment fraud in India starts with a fee demand and ends with a drained account.
+  JobForge gives you three screens, use all of them.</p>
+  <div class="cols3">
+    <div class="card"><h4>Paste screen</h4><p>Scam page, message mode. Paste any WhatsApp forward or job ad. 18 indicators, risk band, specific advice.</p></div>
+    <div class="card"><h4>Email screen</h4><p>Switch to Full email mode, paste sender, reply to, subject and body. Adds domain and link lie detection.</p></div>
+    <div class="card"><h4>Inbox screen</h4><p>Helper extension inside Gmail and Outlook. One click on the open mail, verdict panel appears in place.</p></div>
+  </div>
+  <div class="hr"></div>
+  <div class="kicker" style="margin-bottom: 2.4mm;">Red flags the engine hunts</div>
+  <table class="tbl">
+    <tr><th style="width:44mm;">Signal</th><th>What it means</th></tr>
+    <tr><td>Fee or deposit demand</td><td>No real employer charges you to interview or join. Walk away.</td></tr>
+    <tr><td>UPI or OTP request</td><td>Account takeover. Never share either with anyone.</td></tr>
+    <tr><td>Reply to mismatch</td><td>Replies divert to another mailbox. Classic takeover trick.</td></tr>
+    <tr><td>Sender domain mismatch</td><td>Gmail claiming to be a company. Verify on the official site.</td></tr>
+    <tr><td>Link text lies</td><td>Text says the company, href goes elsewhere. Never click, type it yourself.</td></tr>
+    <tr><td>Offer without interview</td><td>Selection without evaluation does not exist.</td></tr>
+    <tr><td>Urgency plus money</td><td>Pressure is the product. Disengage and report.</td></tr>
+  </table>
+  <div class="callout"><b>Calibrated, not paranoid.</b> A WhatsApp contact alone never gets branded fraud.
+  A payment demand always blocks automation, whatever the skill match. Every verdict shows its evidence.</div>
+  <div class="foot"><span><b>JobForge Field Guide</b> · Defense</span><span>9</span></div>
+</div>
+
+<!-- ============ PAGE 10 RELOCATION + TRACKER ============ -->
+<div class="page">
+  <div class="phead">
+    <div class="pnum">09</div>
+    <div class="t"><div class="k">Part 9 · Decisions and pipeline</div><h2>Relocation math and the tracker</h2></div>
+  </div>
+  <div class="cols2">
+    <div>
+      <div class="kicker" style="margin-bottom: 2.4mm;">Relocation page</div>
+      <p class="mut" style="font-size: 9pt;">Enter fixed pay or take home, deposit, moving costs.
+      Three scenarios come back: cautious, base, favorable, each with monthly surplus, savings margin
+      and the gap over staying in Pune.</p>
+      <ul class="tight">
+        <li><b>Deposits are liquidity</b>, never counted as monthly cost</li>
+        <li><b>Joining bonus and variable pay</b> excluded from monthly figures</li>
+        <li><b>Undisclosed pay</b> returns unknown plus the questions to ask, never a guess</li>
+        <li><b>Budgets are editable</b> per city, your numbers beat any default</li>
+      </ul>
+      <div class="callout cy" style="margin-top: 3mm;"><b>Policy checks.</b> Set your minimum surplus and
+      maximum upfront need in policy, and every evaluation answers yes or no against them.</div>
+    </div>
+    <div>
+      <div class="kicker" style="margin-bottom: 2.4mm;">Tracker page</div>
+      <p class="mut" style="font-size: 9pt;">Seven columns from Shortlisted to Offer. Cards move
+      themselves on facts: packet forged, round scheduled, receipt attached. Manual moves always available.</p>
+      <ul class="tight">
+        <li><b>Schedule every round</b> with date, time and mode. Countdown chips appear on the board and Today.</li>
+        <li><b>Reminders fire</b> one hour before each round as browser notifications.</li>
+        <li><b>A submission counts</b> only when you attach the confirmation reference. Duplicate applies are blocked.</li>
+        <li><b>The board refreshes live</b> every five seconds. Leave it open on a second screen.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="hr"></div>
+  <div class="callout gr"><b>The tracker discipline.</b> One rule: a job never leaves your brain until it
+  leaves the board. Every apply gets a receipt, every interview gets a round, every outcome gets recorded.
+  The funnel data this produces is how you learn what actually works for you.</div>
+  <div class="foot"><span><b>JobForge Field Guide</b> · Decisions and pipeline</span><span>10</span></div>
+</div>
+
+<!-- ============ PAGE 11 AI KEYS ============ -->
+<div class="page">
+  <div class="phead">
+    <div class="pnum">10</div>
+    <div class="t"><div class="k">Part 10 · Optional brain</div><h2>AI keys: where and how</h2></div>
+  </div>
+  <p class="lead">JobForge works fully with no key. Add one and the cover letters and bullets get
+  sharper. Pick from the table, then the four wiring steps below.</p>
+  <table class="tbl">
+    <tr><th>Provider</th><th style="width:38mm;">Get the key at</th><th style="width:22mm;">Cost</th><th>Why pick it</th></tr>
+    <tr><td>Groq</td><td class="mono">console.groq.com/keys</td><td>Free tier</td><td>Fastest start, generous limits, the recommended first key</td></tr>
+    <tr><td>Anthropic Claude</td><td class="mono">console.anthropic.com/settings/keys</td><td>Pay per use</td><td>Best cover letter writing. Haiku is cheap, Sonnet is finest</td></tr>
+    <tr><td>OpenAI</td><td class="mono">platform.openai.com/api-keys</td><td>Pay per use</td><td>Solid all rounder, gpt-4o-mini is inexpensive</td></tr>
+    <tr><td>OpenRouter</td><td class="mono">openrouter.ai/keys</td><td>Free daily models</td><td>One key, hundreds of models to experiment with</td></tr>
+    <tr><td>Ollama</td><td class="mono">ollama.com/download</td><td>Free, local</td><td>Runs offline on your machine. Resume never leaves it. No key needed</td></tr>
+    <tr><td>Z.ai GLM</td><td class="mono">z.ai/manage-apikey/apikey-list</td><td>Pay per use</td><td>GLM models through an OpenAI compatible endpoint</td></tr>
+  </table>
+  <div class="kicker" style="margin: 2mm 0 2.4mm;">Wiring it in, four steps</div>
+  <div class="step"><div class="n">1</div><div class="b"><b>Create an account at the provider</b><p>Sign up, skip the guided tours, head straight for the API keys page from the table.</p></div></div>
+  <div class="step"><div class="n">2</div><div class="b"><b>Generate a key and copy it</b><p>Providers show it once. Paste it somewhere safe immediately. Groq and OpenRouter are free
+  tier, no card needed.</p></div></div>
+  <div class="step"><div class="n">3</div><div class="b"><b>Paste it into JobForge</b><p>Settings, AI provider, click the provider card, paste the key, optionally pick a model,
+  press Save.</p></div></div>
+  <div class="step"><div class="n">4</div><div class="b"><b>Press Test</b><p>Green message means live. The sidebar dot turns on with the model name. Keys live in a git
+  ignored local file and travel only to the provider you chose.</p></div></div>
+  <div class="callout"><b>Ollama is the privacy pick.</b> Install it, pull a model
+  (<span class="mono">ollama pull llama3.1</span>), select Ollama in Settings. No key, no internet, no
+  data leaving the machine.</div>
+  <div class="foot"><span><b>JobForge Field Guide</b> · Optional brain</span><span>11</span></div>
+</div>
+
+<!-- ============ PAGE 12 EXTENSION ============ -->
+<div class="page">
+  <div class="phead">
+    <div class="pnum">11</div>
+    <div class="t"><div class="k">Part 11 · Browser power</div><h2>The Chrome helper</h2></div>
+  </div>
+  <div class="kicker" style="margin-bottom: 2.4mm;">Install, two minutes, once</div>
+  <div class="step"><div class="n">1</div><div class="b"><b>Copy the token</b><p>JobForge, Settings, Helper extension card, Copy token.</p></div></div>
+  <div class="step"><div class="n">2</div><div class="b"><b>Load it into Chrome</b><p>Type <span class="mono">chrome://extensions</span>, enable Developer mode, press Load
+  unpacked, select the <span class="mono">extension</span> folder from the project. Pin the icon.</p></div></div>
+  <div class="step"><div class="n">3</div><div class="b"><b>Pair it</b><p>Click the icon, paste the token, press Pair, then Test. Connected means live. Works on Edge
+  through edge://extensions the same way.</p></div></div>
+  <div class="hr"></div>
+  <div class="cols3">
+    <div class="card"><h4 class="gtext">Send to JobForge</h4><p>On any posting on LinkedIn, Naukri, Greenhouse, Lever, Ashby, SmartRecruiters or Workday. One
+    click captures it, scored and screened within a second.</p></div>
+    <div class="card"><h4 class="gtext">Autofill with JobForge</h4><p>On application forms. Fills name, contact, links, notice period, approved answers. Every value
+    is remembered and editable, a wrong fill never repeats.</p></div>
+    <div class="card"><h4 class="gtext">Check this email</h4><p>In Gmail and Outlook. Screens the open mail, shows the verdict inline. Reads only that one
+    mail, only when you click.</p></div>
+  </div>
+  <div class="callout"><b>The one line that matters.</b> The helper never presses submit. Not on any site.
+  It stops one click short and leaves that click to you, because account bans land on you, not on tools.</div>
+  <div class="foot"><span><b>JobForge Field Guide</b> · Browser power</span><span>12</span></div>
+</div>
+
+<!-- ============ PAGE 13 DAILY ROUTINE ============ -->
+<div class="page">
+  <div class="phead">
+    <div class="pnum">12</div>
+    <div class="t"><div class="k">Part 12 · The system</div><h2>The daily power routine</h2></div>
+  </div>
+  <p class="lead">Ten to fifteen quality applications in under an hour. The boards refreshed overnight,
+  your part is judgment and clicks.</p>
+  <table class="tbl">
+    <tr><th style="width:26mm;">Block</th><th style="width:20mm;">Time</th><th>Actions</th></tr>
+    <tr><td>Morning scan</td><td>10 min</td><td>Open Today. Clear the deadline radar first. Shortlist or skip every hunt deck card. Decide the
+    needs decision lane. Total: zero undecided cards.</td></tr>
+    <tr><td>Capture run</td><td>15 min</td><td>LinkedIn and Naukri with your premium filters. One click on Send to JobForge for anything
+    decent. Ten captures in fifteen minutes is normal.</td></tr>
+    <tr><td>Packet batch</td><td>15 min</td><td>Open each shortlisted role, forge the packet, read it, copy the referral message, send it to
+    one real person at that company.</td></tr>
+    <tr><td>Apply batch</td><td>15 min</td><td>Open official posting, Autofill with JobForge, review every field, attach resume, press submit
+    yourself. Paste the confirmation into the tracker receipt.</td></tr>
+    <tr><td>Close out</td><td>5 min</td><td>Round radar check, schedule anything the recruiters sent, update outcomes. Board ends the day
+    clean.</td></tr>
+  </table>
+  <div class="hr"></div>
+  <div class="cols2">
+    <div class="callout gr" style="margin:0;"><b>Weekly, 20 minutes.</b> Add five new boards. Tune the
+    weights in Settings based on which lanes are producing interviews. Prune skills nobody asks for,
+    add the ones appearing in your gaps.</div>
+    <div class="callout cy" style="margin:0;"><b>The rule of one.</b> One referral message per company
+    before any cold apply. One pass over every autofilled field before every submit. One receipt per
+    application. Small discipline, compounding returns.</div>
+  </div>
+  <div class="foot"><span><b>JobForge Field Guide</b> · The system</span><span>13</span></div>
+</div>
+
+<!-- ============ PAGE 14 PRO MOVES ============ -->
+<div class="page">
+  <div class="phead">
+    <div class="pnum">13</div>
+    <div class="t"><div class="k">Part 13 · Edge</div><h2>Pro moves and efficiency</h2></div>
+  </div>
+  <div class="cols2">
+    <div class="card"><h4>Retune the weights</h4><p>Settings, Matching weights. Interviews coming only from
+    remote roles? Raise location weight. Missing skill gates too often? Lower skill fit a few points.
+    The board re ranks live as you drag.</p></div>
+    <div class="card"><h4>Use the score slider</h4><p>Minimum score 60 on busy days, 45 when the market is
+    quiet. The counter on every tab tells you the cost of each setting before you click.</p></div>
+    <div class="card"><h4>Fix autofill once</h4><p>Settings, Autofill data. Anything corrected there wins
+    over everything else forever. Keep expected pay empty until you truly decide the number.</p></div>
+    <div class="card"><h4>Work the Boolean strings</h4><p>Jobs page bottom. Copy the LinkedIn string into
+    your premium search, save it as an alert, let your subscription do night duty for free.</p></div>
+    <div class="card"><h4>Trust the closed lane</h4><p>A closed role that reopens jumps back to open by
+    itself. Reapply discipline: check the tracker before any submit, duplicates are blocked anyway.</p></div>
+    <div class="card"><h4>Read the funnel</h4><p>Ten shortlisted and one submitted is a you problem. Fifty
+    submitted and zero interviews is a targeting problem: raise the slider, tighten role families.</p></div>
+  </div>
+  <div class="hr"></div>
+  <div class="kicker" style="margin-bottom: 2.4mm;">Efficiency checklist</div>
+  <ul class="tight">
+    <li><b>Never browse postings without the helper active.</b> Every interesting page is one click from your tracker.</li>
+    <li><b>Batch by company.</b> Referral first, apply second, always in that order.</li>
+    <li><b>Same time daily.</b> The routine compounds when recruiters learn your reply rhythm.</li>
+    <li><b>Friday audit.</b> Weights, boards, skills, twenty minutes, weekly.</li>
+  </ul>
+  <div class="foot"><span><b>JobForge Field Guide</b> · Edge</span><span>14</span></div>
+</div>
+
+<!-- ============ PAGE 15 HOSTING + TROUBLESHOOT ============ -->
+<div class="page">
+  <div class="phead">
+    <div class="pnum">14</div>
+    <div class="t"><div class="k">Part 14 · Beyond localhost</div><h2>Hosting and troubleshooting</h2></div>
+  </div>
+  <div class="kicker" style="margin-bottom: 2.4mm;">Share it or keep it, your call</div>
+  <div class="step"><div class="n">1</div><div class="b"><b>Build and start in one process</b><p><span class="mono">npm run build</span> then <span class="mono">npm start</span>. Everything serves from port 8787.</p></div></div>
+  <div class="step"><div class="n">2</div><div class="b"><b>Expose it</b><p>Any HTTPS tunnel works. With cloudflared: <span class="mono">cloudflared tunnel --url http://localhost:8787</span>.
+  Share the URL it prints.</p></div></div>
+  <div class="step"><div class="n">3</div><div class="b"><b>Choose the mode</b><p>Settings, Access. Open access by default: everyone with the link uses it free. Flip to private
+  and visitors need the six digit code. Only you can flip it, on the host machine or with the admin
+  code printed at startup.</p></div></div>
+  <div class="hr"></div>
+  <div class="kicker" style="margin-bottom: 2.4mm;">Fixes in thirty seconds</div>
+  <table class="tbl">
+    <tr><th style="width:52mm;">Symptom</th><th>Fix</th></tr>
+    <tr><td>Board empty after start</td><td>First scoring takes up to a minute. Wait, then reload. Later loads are instant.</td></tr>
+    <tr><td>Port 8787 already in use</td><td>An old node process survived. Kill it by PID from netstat, or restart the machine, then npm start.</td></tr>
+    <tr><td>Helper test fails</td><td>JobForge must be running first. Recheck token in Settings, press Test again.</td></tr>
+    <tr><td>Autofill filled wrong data</td><td>Fix it in Settings, Autofill data, or in the helper options. Saved corrections win forever.</td></tr>
+    <tr><td>A board stopped returning</td><td>Sources page, probe icon. Boards go quiet when hiring pauses, that is the company, not the app.</td></tr>
+    <tr><td>AI test says unauthorized</td><td>Key pasted with a space, or no credit on a paid provider. Groq and OpenRouter keys are free to verify.</td></tr>
+    <tr><td>Reminders not firing</td><td>Browser notifications blocked. Allow them for localhost, keep a tab open.</td></tr>
+  </table>
+  <div class="callout"><b>Data belongs to you.</b> Settings, Export downloads everything as JSON. Reset
+  wipes it all locally. Nothing syncs anywhere without your tunnel running.</div>
+  <div class="foot"><span><b>JobForge Field Guide</b> · Beyond localhost</span><span>15</span></div>
+</div>
+
+<!-- ============ PAGE 16 QUICK REFERENCE ============ -->
+<div class="page last">
+  <div class="phead">
+    <div class="pnum">15</div>
+    <div class="t"><div class="k">Keep this page</div><h2>Quick reference card</h2></div>
+  </div>
+  <div class="cols2">
+    <div>
+      <div class="kicker" style="margin-bottom: 2.4mm;">Commands</div>
+      <div class="code">npm install        # once
+npm run dev        # daily use, ports 8787 + 5173
+npm run build      # production bundle
+npm start          # single process on 8787
+npm test           # 30 tests, seconds</div>
+      <div class="kicker" style="margin: 4mm 0 2.4mm;">Key URLs</div>
+      <table class="tbl">
+        <tr><td>Cockpit</td><td class="mono">localhost:8787</td></tr>
+        <tr><td>Groq key</td><td class="mono">console.groq.com/keys</td></tr>
+        <tr><td>Claude key</td><td class="mono">console.anthropic.com/settings/keys</td></tr>
+        <tr><td>OpenAI key</td><td class="mono">platform.openai.com/api-keys</td></tr>
+        <tr><td>OpenRouter</td><td class="mono">openrouter.ai/keys</td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="kicker" style="margin-bottom: 2.4mm;">The loop, memorized</div>
+      <ul class="tight">
+        <li><b>Scan</b> Today, clear every card</li>
+        <li><b>Capture</b> LinkedIn, Naukri, one click each</li>
+        <li><b>Packet</b> forge, read, copy referral</li>
+        <li><b>Refer</b> one person per company, first</li>
+        <li><b>Apply</b> autofill, review, your submit</li>
+        <li><b>Receipt</b> paste confirmation in tracker</li>
+        <li><b>Round</b> schedule it, reminder fires at T minus one hour</li>
+      </ul>
+      <div class="kicker" style="margin: 4mm 0 2.4mm;">Never forget</div>
+      <div class="callout" style="margin:0;"><b>Fees are fraud.</b> OTPs are fraud. Real employers never
+  charge you. Screen every mail that asks for anything.</div>
+    </div>
+  </div>
+  <div class="hr"></div>
+  <div style="display:flex; align-items:center; gap: 5mm; margin-top: 4mm;">
+    <div style="width: 11mm; height: 11mm; border-radius: 3.2mm; background: var(--grad); display:flex; align-items:center; justify-content:center;">
+      <svg width="6.4mm" height="6.4mm" viewBox="0 0 32 32"><path d="M16 4 C21 12 26 15 26 21.5 C26 26.5 21.5 29 16 29 C10.5 29 6 26.5 6 21.5 C6 16.5 12 14 13.5 9.5 C14.8 12.6 17.5 13 16 4 Z" fill="#07070c"/></svg>
+    </div>
+    <div>
+      <div class="big">Forge your applications. <span class="gtext">Land the role.</span></div>
+      <p class="mut" style="font-size: 8.8pt;">github.com/siddhant-pardeshi/JobForge · MIT · built in Pune ·
+      free forever, starring it is the best thanks</p>
+    </div>
+  </div>
+  <div class="foot"><span><b>JobForge Field Guide</b> · Quick reference</span><span>16</span></div>
+</div>
+
+</body>
+</html>

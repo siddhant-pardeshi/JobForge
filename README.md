@@ -17,9 +17,15 @@
   <a href="https://readme-typing-svg.demolab.com"><img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&size=17&pause=1100&color=FF8A3D&center=true&vCenter=true&width=720&lines=Real+openings+from+21+verified+employer+boards;Every+match+scored+and+explained;Mail+fraud+screening+inside+Gmail+and+Outlook;A+tracker+that+organizes+itself;Pune+first.+India+wide.+Remote+honest." alt="typing"/></a>
 </p>
 
+<p align="center">
+  <a href="https://github.com/siddhant-pardeshi/JobForge/blob/main/JobForge-Guide.pdf"><img src="https://img.shields.io/badge/READ%20THE%20FIELD%20GUIDE-16%20page%20PDF-ff5c1a?style=for-the-badge&labelColor=0b0b15&logo=adobeacrobatreader&logoColor=white" alt="JobForge Field Guide PDF"/></a>
+</p>
+
 JobForge is a job hunt cockpit for software engineers in India. Point it at your resume, and it pulls live openings from 21 employer career boards (Zscaler Pune, Databricks, Meesho, Rubrik, Okta, Stripe, GitLab, Figma, MongoDB, OpenAI and more), scores each one against your actual skills, flags scam mails before you reply, drafts your cover letter and referral note, and keeps the whole pipeline on a board that updates itself.
 
 It runs on your machine. Your resume and keys never leave it.
+
+New here? The **[JobForge Field Guide](JobForge-Guide.pdf)** is a 16 page step by step PDF covering setup, the daily power routine, API key wiring with every provider link, the Chrome helper, and troubleshooting. The HTML source lives in docs/guide/.
 
 ```bash
 git clone https://github.com/siddhant-pardeshi/JobForge.git
