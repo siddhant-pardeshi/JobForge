@@ -19,6 +19,9 @@ State of every capability as of the real data release, 25 October 2026. The cate
 * Answer bank with scope and approval flags, surfaced to the extension autofill.
 * Boolean search strings for LinkedIn, Naukri, and Google indexed ATS boards.
 * JobForge Helper browser extension: capture on LinkedIn, Naukri, Greenhouse, Lever, Ashby, SmartRecruiters, Workday, and structured data pages; form autofill from approved answers with persistent editable memory (app side editor, extension side editor with sync, and last used value tracking); token gated pairing to localhost only.
+* Scam screening: 18 body indicators plus 5 email envelope checks (reply to mismatch, sender domain against the claimed employer, link text versus real destination, shorteners, urgent money combinations), severity bands, blocking rules, private log. One click screening of the open email inside Gmail and Outlook through the helper.
+* Application rounds and reminders: per application events with date, time, mode, and notes; a Today radar with countdowns; browser notifications one hour before each round.
+* Self organizing tracker: forging a packet auto creates or advances the application to preparing, scheduling a round promotes the card to interview, receipts make submissions count, and the board re-renders every change live on a five second cycle with animated transitions.
 * Application packets with tailored cover letter (AI or rules drafted, resume grounded), a roughly one hundred character referral request message with character count, and copy buttons for both.
 * Narrated voice walkthrough audio shipped at docs/media/jobforge-walkthrough.wav plus the in app tour and recording script.
 * Guided in app tour with spoken narration through the browser speech engine and a matching recording script in docs/WALKTHROUGH.md.

@@ -20,7 +20,11 @@
         "https://jobs.eu.lever.co/*",
         "https://jobs.ashbyhq.com/*",
         "https://jobs.smartrecruiters.com/*",
-        "https://*.myworkdayjobs.com/*"
+        "https://*.myworkdayjobs.com/*",
+        "https://mail.google.com/*",
+        "https://outlook.office.com/mail/*",
+        "https://outlook.office365.com/mail/*",
+        "https://outlook.live.com/mail/*"
       ],
       "js": ["content.js"],
       "run_at": "document_idle"

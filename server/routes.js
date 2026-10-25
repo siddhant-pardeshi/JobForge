@@ -6,7 +6,7 @@ import crypto from 'crypto';
 import { load, save, id, bootstrap, resumeDir, DATA_DIR, DEFAULT_SETTINGS, DEFAULT_ANSWERS, FILL_FIELDS } from './store.js';
 import { extractText, draftProfile } from './services/parser.js';
 import { scoreJob, mergeDuplicates, parseExperience, classify } from './services/scoring.js';
-import { analyzeScam } from './services/scam.js';
+import { analyzeScam, analyzeEmail } from './services/scam.js';
 import { fetchFromProvider, verifyBoard, ATS_PROVIDERS } from './services/ats.js';
 import { PRESETS, llmStatus, testProvider } from './services/llm.js';
 import { buildPacket, booleanStrings } from './services/tailoring.js';
@@ -246,7 +246,47 @@ router.post('/jobs/:id/packet', ah(async (req, res) => {
   const stored = { id: id('pkt'), jobId: job.id, createdAt: packet.generatedAt, packet };
   packets.push(stored);
   save('packets', packets.slice(-100));
-  res.json({ ok: true, packetId: stored.id, packet });
+
+  // Auto organize: preparing documents is a fact once a packet is forged, so
+  // the tracker reflects it without a manual drag. Creating the application
+  // here also means a role never gets lost between Jobs and Tracker.
+  const apps = load('applications') || [];
+  let app = apps.find((a) => a.jobId === job.id && !['skipped', 'rejected', 'withdrawn'].includes(a.state));
+  let autoOrganized = null;
+  if (!app) {
+    const now = new Date().toISOString();
+    app = {
+      id: id('app'),
+      jobId: job.id,
+      jobSnapshot: { title: job.title, company: job.company?.name, city: job.city, applyUrl: job.applyUrl },
+      state: 'preparing',
+      mode: 'manual',
+      receipt: null,
+      events: [],
+      history: [
+        { state: 'discovered', at: now },
+        { state: 'shortlisted', at: now, note: 'Auto organized: a packet was forged for this role' },
+        { state: 'preparing', at: now, note: 'Auto organized: packet ready' }
+      ],
+      createdAt: now,
+      updatedAt: now
+    };
+    apps.push(app);
+    autoOrganized = 'created';
+  } else {
+    const path = findTransitionPath(TRANSITIONS, app.state, 'preparing');
+    if (path) {
+      for (const step of path) {
+        app.state = step;
+        app.history.push({ state: step, at: new Date().toISOString(), note: 'Auto organized: packet forged' });
+      }
+      autoOrganized = 'preparing';
+    }
+  }
+  app.updatedAt = new Date().toISOString();
+  save('applications', apps);
+
+  res.json({ ok: true, packetId: stored.id, packet, autoOrganized, applicationId: app.id });
 }));
 
 // ---- companies and sources ----
@@ -348,6 +388,90 @@ router.get('/scam/log', ah(async (req, res) => {
   res.json({ log: (load('scamlog') || []).slice(-50).reverse() });
 }));
 
+// Full email screening, fed by the helper on an open email or by pasted
+// envelope facts. One email per check, always user initiated.
+router.post('/mail/analyze', ah(async (req, res) => {
+  const input = req.body || {};
+  const text = `${input.subject || ''}\n${input.body || ''}`;
+  if (String(text).trim().length < 20 && !input.from) return res.status(400).json({ error: 'Open the email in the helper, or paste at least the subject and body' });
+  const result = analyzeEmail(input);
+  const log = load('scamlog') || [];
+  log.push({ id: id('scm'), kind: 'email', text: String(input.subject || input.body || '').slice(0, 4000), from: input.from || null, result, at: result.checkedAt });
+  save('scamlog', log.slice(-100));
+  res.json({ ok: true, result });
+}));
+
+// Upcoming rounds across every tracked application, for the Today radar and
+// the browser reminders.
+router.get('/agenda', ah(async (req, res) => {
+  const apps = load('applications') || [];
+  const now = Date.now();
+  const horizon = now + 14 * 86400000;
+  const items = [];
+  for (const app of apps) {
+    for (const ev of app.events || []) {
+      const at = new Date(ev.at).getTime();
+      if (!at) continue;
+      if (at <= horizon) {
+        items.push({
+          appId: app.id,
+          jobTitle: app.jobSnapshot?.title || 'Role',
+          company: app.jobSnapshot?.company || '',
+          state: app.state,
+          eventId: ev.id,
+          label: ev.label,
+          at: ev.at,
+          mode: ev.mode || null,
+          note: ev.note || null,
+          overdue: at < now
+        });
+      }
+    }
+  }
+  items.sort((a, b) => new Date(a.at) - new Date(b.at));
+  res.json({ ok: true, items });
+}));
+
+// Interview rounds and reminders attached to a tracked application.
+router.post('/applications/:id/events', ah(async (req, res) => {
+  const { label, at, mode, note } = req.body || {};
+  if (!label || !at) return res.status(400).json({ error: 'A round label and a date and time are both required' });
+  const when = new Date(at);
+  if (Number.isNaN(when.getTime())) return res.status(400).json({ error: 'That date and time could not be read' });
+  const apps = load('applications') || [];
+  const app = apps.find((a) => a.id === req.params.id);
+  if (!app) return res.status(404).json({ error: 'Application not found' });
+  app.events = app.events || [];
+  const event = { id: id('ev'), label: String(label).slice(0, 80), at: when.toISOString(), mode: String(mode || '').slice(0, 40) || null, note: String(note || '').slice(0, 300) || null };
+  app.events.push(event);
+  app.updatedAt = new Date().toISOString();
+
+  // Auto organize: scheduling an interview round is a fact, so the board
+  // reflects it without a manual drag.
+  let autoMoved = null;
+  if (/interview|round|discussion|screening/i.test(event.label)) {
+    const path = findTransitionPath(TRANSITIONS, app.state, 'interview');
+    if (path) {
+      for (const step of path) {
+        app.state = step;
+        app.history.push({ state: step, at: new Date().toISOString(), note: 'Auto organized: this round was scheduled' });
+      }
+      autoMoved = 'interview';
+    }
+  }
+  save('applications', apps);
+  res.json({ ok: true, application: app, autoMoved });
+}));
+
+router.delete('/applications/:id/events/:eventId', ah(async (req, res) => {
+  const apps = load('applications') || [];
+  const app = apps.find((a) => a.id === req.params.id);
+  if (!app) return res.status(404).json({ error: 'Application not found' });
+  app.events = (app.events || []).filter((e) => e.id !== req.params.eventId);
+  save('applications', apps);
+  res.json({ ok: true, application: app });
+}));
+
 // ---- relocation ----
 router.get('/relocation', ah(async (req, res) => {
   const settings = getSettings();
@@ -394,6 +518,26 @@ const TRANSITIONS = {
   skipped: ['discovered']
 };
 
+// Breadth first path through the legal transitions, used by the auto
+// organize rules. Returns the intermediate states to walk through, excluding
+// the current state, or null when no legal path exists.
+function findTransitionPath(table, from, to) {
+  if (from === to) return [];
+  const queue = [[from, []]];
+  const seen = new Set([from]);
+  while (queue.length) {
+    const [current, path] = queue.shift();
+    for (const next of table[current] || []) {
+      if (next === to) return [...path, next];
+      if (!seen.has(next)) {
+        seen.add(next);
+        queue.push([next, [...path, next]]);
+      }
+    }
+  }
+  return null;
+}
+
 router.get('/applications', ah(async (req, res) => {
   res.json({ applications: load('applications') || [], transitions: TRANSITIONS });
 }));
@@ -414,6 +558,7 @@ router.post('/applications', ah(async (req, res) => {
     state: 'discovered',
     mode: 'manual',
     receipt: null,
+    events: [],
     history: [{ state: 'discovered', at: now }],
     createdAt: now,
     updatedAt: now

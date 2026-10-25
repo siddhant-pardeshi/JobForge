@@ -290,3 +290,7 @@ input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; width: 17p
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001s !important; animation-iteration-count: 1 !important; transition-duration: 0.001s !important; }
 }
+
+/* ---------- live pulse for the tracker ---------- */
+.live-dot { color: var(--cyan); animation: livePulse 1.6s ease-in-out infinite; }
+@keyframes livePulse { 0%, 100% { opacity: 1; filter: drop-shadow(0 0 4px var(--cyan)); } 50% { opacity: 0.35; filter: none; } }

@@ -73,3 +73,138 @@ export function analyzeScam(text, meta = {}) {
     inputLength: body.length
   };
 }
+
+// ---------- full email screening ----------
+// Reads the envelope facts the helper extracts from an open email plus the
+// visible body, and layers mail specific fraud checks on top of the body
+// indicators. Nothing here reads a mailbox silently: the helper only ever
+// checks the single email the user is viewing and pressed the button on.
+
+const SHORTENER_HOSTS = ['bit.ly', 'tinyurl.com', 't.me', 'cutt.ly', 'is.gd', 'rb.gy', 'shorturl.at', 'rebrand.ly', 'tiny.cc'];
+
+function parseAddress(raw) {
+  const match = String(raw || '').match(/"?([^"<]*)"?\s*<([^>]+)>/) || [null, '', String(raw || '').trim()];
+  const name = (match[1] || '').trim();
+  const address = (match[2] || match[2] === '' ? match[2] : '').trim();
+  return { name, address, domain: address.split('@')[1]?.toLowerCase() || '' };
+}
+
+function companyTokens(claimed) {
+  return String(claimed || '')
+    .toLowerCase()
+    .replace(/\b(pvt|private|ltd|limited|llp|inc|technologies|technology|tech|solutions|software|services|labs|india)\b\.?/g, '')
+    .split(/[^a-z]+/)
+    .filter((t) => t.length >= 4);
+}
+
+export function analyzeEmail({ from, replyTo, subject, body, links = [], claimedCompany } = {}) {
+  const sender = parseAddress(from);
+  const re = parseAddress(replyTo);
+  const bodyText = `${subject || ''}\n${body || ''}`;
+  const base = analyzeScam(bodyText, { claimedCompany });
+  const flags = [...base.flags];
+  const mailFlags = [];
+  let score = base.score;
+
+  const addFlag = (flag) => {
+    mailFlags.push(flag);
+    flags.push(flag);
+    score += flag.weight;
+  };
+
+  // Reply to address diverting away from the sender is a classic takeover tell.
+  if (re.address && sender.address && re.address.toLowerCase() !== sender.address.toLowerCase()) {
+    addFlag({ id: 'replyToMismatch', label: `Reply to address (${re.address}) differs from the sender`, weight: 15, critical: false, advice: 'Replies would go to a different mailbox, a common takeover trick. Confirm the address on the company website before replying.' });
+  }
+
+  // The claimed employer's name should appear somewhere in a corporate domain.
+  if (claimedCompany && sender.domain) {
+    const tokens = companyTokens(claimedCompany);
+    if (tokens.length && !tokens.some((t) => sender.domain.includes(t))) {
+      const personal = /(gmail|yahoo|hotmail|outlook|rediffmail|proton)\./i.test(sender.domain);
+      addFlag({
+        id: 'senderDomainMismatch',
+        label: `Sender domain (${sender.domain}) does not match the claimed employer${personal ? ' and is a free mailbox' : ''}`,
+        weight: personal ? 20 : 12,
+        critical: false,
+        advice: 'Companies hire from their own domain. Search the company yourself and verify this address on its official careers or contact page.'
+      });
+    }
+  }
+
+  // Display name impersonation: claims to be the company from an unrelated domain.
+  if (claimedCompany && sender.name && !sender.domain) {
+    // handled by domain checks above when an address exists
+  }
+
+  // Link text promising one destination while the href goes somewhere else.
+  let linkMismatch = 0;
+  for (const link of links) {
+    const text = String(link.text || '');
+    const href = String(link.href || '');
+    if (!text || !href) continue;
+    const textDomain = (text.match(/([a-z0-9-]+\.(?:com|in|io|co|org|net))/i) || [])[1];
+    try {
+      const hrefHost = new URL(href).hostname.replace(/^www\./, '');
+      if (textDomain && hrefHost && !hrefHost.endsWith(textDomain.toLowerCase()) && !textDomain.toLowerCase().endsWith(hrefHost)) {
+        linkMismatch++;
+        if (linkMismatch <= 2) {
+          addFlag({
+            id: 'linkTextMismatch',
+            label: `Link text says "${textDomain}" but it really goes to ${hrefHost}`,
+            weight: 15,
+            critical: false,
+            advice: 'The visible link text and the real destination disagree. Never tap it; type the company address yourself instead.'
+          });
+        }
+      }
+      if (SHORTENER_HOSTS.some((s) => hrefHost === s || hrefHost.endsWith(`.${s}`))) {
+        addFlag({
+          id: 'shortenerLink',
+          label: `Shortened link hides its destination (${hrefHost})`,
+          weight: 10,
+          critical: false,
+          advice: 'Expand and inspect the destination before trusting a shortened link.'
+        });
+      }
+    } catch { /* malformed href */ }
+  }
+
+  // Subject level urgency plus any money request is the classic waste of time.
+  if (/urgent|interview.*(today|tomorrow)|immediate confirmation/i.test(subject || '') && /fee|pay|deposit|₹|rs\.\s*\d/i.test(body || '')) {
+    addFlag({ id: 'urgentMoney', label: 'Urgent subject line combined with a money request', weight: 15, critical: true, advice: 'Urgency plus money is the exact shape of recruitment fraud. Disengage and report.' });
+  }
+
+  score = Math.min(100, score);
+  const criticalHit = flags.some((f) => f.critical);
+  let severity = 'clear';
+  if (score >= 70 || (criticalHit && score >= 45)) severity = 'critical';
+  else if (score >= 45 || criticalHit) severity = 'high';
+  else if (score >= 22) severity = 'medium';
+  else if (score >= 12) severity = 'low';
+
+  const steps = [];
+  if (severity === 'clear' || severity === 'low') steps.push('No strong fraud indicators in this email. Caution with links is still wise.');
+  for (const f of [...mailFlags, ...base.flags].slice(0, 6)) steps.push(f.advice);
+  steps.push('Verify the sender on the company\'s official website found by searching the name yourself, not through links in this mail.');
+  steps.push('A genuine interview never needs your money, an OTP, or your banking details.');
+  steps.push('If it arrived through a job platform, report it there so other candidates are protected.');
+
+  const blocks = [];
+  if (severity === 'high' || severity === 'critical') {
+    blocks.push('Automatic actions are blocked for this contact. Nothing will be submitted or disclosed.');
+  }
+
+  return {
+    score,
+    severity,
+    flags: flags.sort((a, b) => b.weight - a.weight),
+    mailFlags,
+    blocks,
+    steps,
+    checkedAt: new Date().toISOString(),
+    sender: { name: sender.name, address: sender.address, domain: sender.domain },
+    replyTo: re.address || null,
+    linksChecked: links.length
+  };
+}

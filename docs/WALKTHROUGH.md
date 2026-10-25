@@ -32,7 +32,7 @@ Genuine sources, live refresh. Twenty one employer boards ship pre verified, and
 
 ## Step 6, Scam Check
 
-Fraud screening, before you trust anything. Paste any WhatsApp forward or email here. Eighteen indicators cover registration fee demands, UPI traps, guaranteed placement hooks, shortened links, and fake sender patterns. A payment demand blocks automated action no matter how perfect the job looks. And a WhatsApp contact alone is never declared fraudulent, because the screen is calibrated, not paranoid. This tool exists because in India, the first person to spot a fake job should be you, not your bank statement.
+Fraud screening, before you trust anything. Paste any WhatsApp forward or email here, or switch to the full email mode for sender, reply to, and link analysis. With the helper, a one click button inside Gmail and Outlook screens the open email and shows a verdict on the spot. Over eighteen indicators cover registration fee demands, UPI traps, guaranteed placement hooks, shortened links, fake sender domains, and link text that lies about where it really goes. A payment demand blocks automated action no matter how perfect the job looks. This tool exists because in India, the first person to spot a fake job should be you, not your bank statement.
 
 ## Step 7, Relocation
 
@@ -40,7 +40,7 @@ Would the move actually pay? For offers outside Pune, this calculator separates 
 
 ## Step 8, Tracker
 
-Every application, honestly tracked. Applications move through a real state machine, from shortlisted through preparing, review, and submitted, all the way to offer. A submission only counts when a receipt backs it. Duplicates are blocked automatically. This is the pipeline that remembers everything so you never apply twice to the same role or lose track of an interview.
+A board that organizes itself. Applications move through a real state machine, and the kanban reorganizes itself live. Forge a packet, and the card moves to preparing on its own. Schedule an interview round with its time, and the card moves to interview, joins the Today radar, and a browser reminder fires an hour before. Attach a receipt, and the submission finally counts. Duplicates are blocked automatically. This is the pipeline that remembers everything, so you never apply twice to the same role or miss an interview.
 
 ## Step 9, AI keys
 

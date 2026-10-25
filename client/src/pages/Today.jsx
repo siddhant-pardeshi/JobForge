@@ -1,24 +1,54 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Flame, CalendarClock, Crosshair, TrendingUp, Radio, ChevronRight, Gauge } from 'lucide-react';
+import { Flame, CalendarClock, Crosshair, TrendingUp, Radio, ChevronRight, Gauge, Bell } from 'lucide-react';
 import { api, daysUntil } from '../api.js';
 import { useApp } from '../App.jsx';
-import { CountUp, Reveal, SectionHead, Chip, Bar, Empty, Spinner } from '../ui.jsx';
+import { CountUp, Reveal, SectionHead, Chip, Bar, Empty, Spinner, useToast } from '../ui.jsx';
 import { JobCard, LANE_META } from '../jobCard.jsx';
 import { useNavigate } from 'react-router-dom';
 
 export default function Today() {
   const { boot } = useApp();
+  const toast = useToast();
   const [data, setData] = useState(null);
   const [apps, setApps] = useState([]);
   const [health, setHealth] = useState(null);
+  const [agenda, setAgenda] = useState([]);
   const navigate = useNavigate();
+  const notifiedRef = useRef(new Set(JSON.parse(localStorage.getItem('jf_notified') || '[]')));
 
   useEffect(() => {
     api('/jobs').then(setData).catch(() => {});
     api('/applications').then((r) => setApps(r.applications)).catch(() => {});
     api('/sources/health').then(setHealth).catch(() => {});
+    api('/agenda').then((r) => setAgenda(r.items)).catch(() => {});
   }, []);
+
+  // Browser reminders: one hour before every scheduled round, once each.
+  useEffect(() => {
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => {});
+    }
+    const tick = setInterval(() => {
+      if (Notification.permission !== 'granted') return;
+      const now = Date.now();
+      for (const item of agenda) {
+        const at = new Date(item.at).getTime();
+        const minsTo = (at - now) / 60000;
+        const key = item.eventId;
+        if (minsTo > 0 && minsTo <= 60 && !notifiedRef.current.has(key)) {
+          notifiedRef.current.add(key);
+          localStorage.setItem('jf_notified', JSON.stringify([...notifiedRef.current].slice(-200)));
+          try {
+            new Notification('JobForge reminder', { body: `${item.label} for ${item.jobTitle} at ${item.company} starts ${Math.max(1, Math.round(minsTo))} min from now.` });
+          } catch { /* notification failures are non fatal */ }
+          toast(`Reminder: ${item.label} for ${item.jobTitle} ${Math.max(1, Math.round(minsTo))} min from now`, 'info');
+        }
+      }
+    }, 30000);
+    return () => clearInterval(tick);
+  }, [agenda, toast]);
 
   const hour = new Date().getHours();
   const greeting = hour < 5 ? 'Burning the midnight oil' : hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
@@ -130,6 +160,30 @@ export default function Today() {
                     <Bar pct={(count / apps.length) * 100} />
                   </div>
                 )) : <p style={{ color: 'var(--faint)', fontSize: 12.5 }}>No applications yet. Shortlist a role and open its tracker entry to begin.</p>}
+              </div>
+            </Reveal>
+
+            <Reveal delay={0.25}>
+              <div className="card" style={{ height: '100%' }}>
+                <SectionHead kicker="Be prepared" title="Round radar" />
+                {agenda.length ? agenda.slice(0, 5).map((item) => {
+                  const at = new Date(item.at).getTime();
+                  const mins = Math.round((at - Date.now()) / 60000);
+                  return (
+                    <motion.div key={item.eventId} whileHover={{ x: 5 }} onClick={() => navigate('/tracker')} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: '9px 0', borderBottom: '1px dashed rgba(255,255,255,0.07)', cursor: 'pointer' }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.label}</div>
+                        <div style={{ fontSize: 11.5, color: 'var(--faint)' }}>{item.jobTitle} · {item.company} · {new Date(item.at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</div>
+                      </div>
+                      <Chip tone={item.overdue ? 'red' : mins < 120 ? 'amber' : 'cyan'}>{item.overdue ? 'happening' : mins < 60 ? `${mins} min` : mins < 1440 ? `${Math.round(mins / 60)}h` : `${Math.round(mins / 1440)}d`}</Chip>
+                    </motion.div>
+                  );
+                }) : <p style={{ color: 'var(--faint)', fontSize: 12.5 }}>No rounds scheduled. Add one from any tracked application and reminders start automatically, an hour before, even as browser notifications.</p>}
+                {agenda.length > 0 && (
+                  <p style={{ fontSize: 10.5, color: 'var(--faint)', marginTop: 8, display: 'flex', gap: 5, alignItems: 'center' }}>
+                    <Bell size={10} /> Browser reminders fire one hour before each round while the app is open.
+                  </p>
+                )}
               </div>
             </Reveal>
 

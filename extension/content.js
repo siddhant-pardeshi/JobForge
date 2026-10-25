@@ -319,3 +319,116 @@ const observer = new MutationObserver(() => {
 });
 observer.observe(document.documentElement, { childList: true, subtree: true });
 maybeInject();
+
+// ---------- email screening on Gmail and Outlook web ----------
+// Reads only the single email currently open on screen, when the user presses
+// the check button. No background reading, no history access, no scraping.
+
+function isMailSite() {
+  const host = location.hostname;
+  return host.includes('mail.google.com') || host.includes('outlook.') || host.includes('.mail.');
+}
+
+function currentEmail() {
+  if (!isMailSite()) return null;
+  let from = '';
+  let subject = '';
+  let bodyEl = null;
+
+  if (location.hostname.includes('mail.google.com')) {
+    subject = document.querySelector('h2.hP')?.textContent?.trim() || '';
+    const fromEl = document.querySelector('.gD');
+    from = fromEl?.getAttribute('email') || fromEl?.getAttribute('name') || fromEl?.textContent || '';
+    const senderName = document.querySelector('.gD')?.textContent?.trim() || '';
+    bodyEl = document.querySelector('.a3s.aiL, .a3s');
+    if (senderName && !/@/.test(from)) from = `${senderName} <${from}>`;
+  } else {
+    // Outlook web: best effort across its frequent markup changes.
+    subject = document.querySelector('[role="heading"][aria-level="2"], .AllowTextSelection span[aria-hidden="false"]')?.textContent?.trim() || '';
+    from = document.querySelector('[aria-label^="From"], .PersonalWellBeing span[title*="@"]')?.getAttribute('title')
+      || document.querySelector('[class*="ItemHeader"] [title*="@"]')?.getAttribute('title') || '';
+    bodyEl = document.querySelector('[aria-label="Message body"], [class*="MessageBody"], [role="document"]');
+  }
+
+  const body = bodyEl ? (bodyEl.innerText || '').trim() : '';
+  const links = bodyEl
+    ? [...bodyEl.querySelectorAll('a')].slice(0, 30).map((a) => ({ text: (a.textContent || '').trim().slice(0, 90), href: a.href }))
+    : [];
+  if (!subject && !body) return null;
+  return { from, replyTo: '', subject, body: body.slice(0, 8000), links, platform: 'email' };
+}
+
+async function checkEmail() {
+  if (!token) { say('Pair first: paste your JobForge token in the helper options.'); return; }
+  const mail = currentEmail();
+  if (!mail) { say('Open the email you want checked, then press the button again.'); return; }
+  say('Screening this email...');
+  try {
+    const res = await fetch(`${SERVER()}/api/mail/analyze`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-jobforge-token': token },
+      body: JSON.stringify(mail)
+    });
+    const data = await res.json();
+    if (!res.ok) { say(data.error || 'The screen failed. Is JobForge running?'); return; }
+    showEmailVerdict(data.result);
+  } catch {
+    say('Could not reach JobForge on localhost:8787. Start it with npm run dev or npm start.');
+  }
+}
+
+const VERDICT_COLORS = { clear: '#34d399', low: '#22d3ee', medium: '#fbbf24', high: '#fb4d4d', critical: '#fb4d4d' };
+const VERDICT_LABELS = { clear: 'No strong indicators', low: 'Low risk', medium: 'Medium risk', high: 'High risk', critical: 'Critical: likely fraud' };
+
+function showEmailVerdict(result) {
+  let panel = document.getElementById('jf-mail-verdict');
+  if (panel) panel.remove();
+  panel = document.createElement('div');
+  panel.id = 'jf-mail-verdict';
+  const color = VERDICT_COLORS[result.severity] || '#fbbf24';
+  const topFlags = result.flags.slice(0, 4);
+  panel.style.cssText = `position:fixed;right:22px;bottom:120px;z-index:2147483000;width:330px;background:rgba(14,14,22,0.96);border:1px solid ${color}66;border-radius:16px;padding:14px;font-family:'Inter',-apple-system,sans-serif;color:#f5f3ef;box-shadow:0 16px 48px rgba(0,0,0,0.5);`;
+  panel.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <strong style="font-size:13px;color:${color};">${VERDICT_LABELS[result.severity] || result.severity} · ${result.score}/100</strong>
+      <span id="jf-mail-close" style="cursor:pointer;color:#6b6779;font-size:14px;">×</span>
+    </div>
+    ${result.replyTo ? `<div style="font-size:10.5px;color:#8b8496;margin-bottom:6px;">Reply-to: ${result.replyTo}</div>` : ''}
+    ${topFlags.length ? topFlags.map((f) => `
+      <div style="margin:6px 0;padding:7px 9px;background:rgba(255,255,255,0.045);border-radius:9px;">
+        <div style="font-size:11.5px;font-weight:600;">${f.critical ? '<span style="color:#ffa2a2;">⚠ </span>' : ''}${f.label}</div>
+        <div style="font-size:10.5px;color:#a09bae;margin-top:2px;">${f.advice}</div>
+      </div>`).join('')
+      : '<div style="font-size:11.5px;color:#8af0c8;margin:8px 0;">No fraud indicators found in this email. Stay alert with links as usual.</div>'}
+    <div style="font-size:10px;color:#6b6779;margin-top:8px;">Checked locally by JobForge. Nothing left your machine except this screening run. Full log in the app.</div>
+  `;
+  document.documentElement.appendChild(panel);
+  panel.querySelector('#jf-mail-close').addEventListener('click', () => panel.remove());
+  setTimeout(() => { const el = document.getElementById('jf-mail-verdict'); if (el) el.remove(); }, 60000);
+}
+
+// Swap the floating button into email mode on mail sites.
+const originalMaybeInject = maybeInject;
+maybeInject = function () {
+  if (isMailSite()) {
+    const mail = currentEmail();
+    mountUI();
+    const btn = document.querySelector(`#${UI_ID} button:not(.secondary)`);
+    const fillBtn = document.querySelector(`#${UI_ID} button.secondary`);
+    if (btn) {
+      btn.textContent = '🛡 Check this email';
+      btn.title = 'Screen the open email for recruitment fraud with JobForge';
+      btn.style.display = mail ? 'block' : 'none';
+      // Rebind click: replace node to drop the job capture handler.
+      if (!btn.dataset.mailMode) {
+        const fresh = btn.cloneNode(true);
+        fresh.dataset.mailMode = '1';
+        fresh.addEventListener('click', checkEmail);
+        btn.replaceWith(fresh);
+      }
+    }
+    if (fillBtn) fillBtn.style.display = 'none';
+    return;
+  }
+  originalMaybeInject();
+};

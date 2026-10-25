@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldAlert, ScanSearch, AlertTriangle, CheckCircle2, ClipboardList } from 'lucide-react';
+import { ShieldAlert, ScanSearch, AlertTriangle, ClipboardList, Mail } from 'lucide-react';
 import { api, timeAgo } from '../api.js';
 import { SectionHead, Chip, Field, Reveal, Spinner, useToast, Bar } from '../ui.jsx';
 
@@ -13,8 +13,12 @@ const SEVERITY = {
 };
 
 export default function Scam() {
+  const [mode, setMode] = useState('text');
   const [text, setText] = useState('');
   const [claimed, setClaimed] = useState('');
+  const [from, setFrom] = useState('');
+  const [replyTo, setReplyTo] = useState('');
+  const [subject, setSubject] = useState('');
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null);
   const [log, setLog] = useState([]);
@@ -26,7 +30,13 @@ export default function Scam() {
   const analyze = async () => {
     setBusy(true);
     try {
-      const res = await api('/scam/analyze', { method: 'POST', body: { text, claimedCompany: claimed || undefined } });
+      let res;
+      if (mode === 'email') {
+        const links = [...String(text).matchAll(/https?:\/\/[^\s<>"')]+/g)].map((m) => ({ text: '', href: m[0] }));
+        res = await api('/mail/analyze', { method: 'POST', body: { from, replyTo, subject, body: text, links, claimedCompany: claimed || undefined } });
+      } else {
+        res = await api('/scam/analyze', { method: 'POST', body: { text, claimedCompany: claimed || undefined } });
+      }
       setResult(res.result);
       loadLog();
       toast(res.result.severity === 'critical' || res.result.severity === 'high' ? 'Serious indicators found. Read the advice below' : 'Screen complete', res.result.severity === 'critical' ? 'err' : 'info');
@@ -36,24 +46,41 @@ export default function Scam() {
 
   const sev = result ? SEVERITY[result.severity] : null;
   const danger = result && (result.severity === 'high' || result.severity === 'critical');
+  const ready = mode === 'email'
+    ? (text.trim().length >= 20 || from.trim().length >= 5)
+    : text.trim().length >= 20;
 
   return (
     <div>
       <SectionHead kicker="Fraud screen" title="Check a message before you trust it"
-        sub="Paste any suspicious email, WhatsApp text, or job ad. Nothing is sent to any third party, the heuristics run locally on your own backend." />
+        sub="Paste any suspicious email, WhatsApp text, or job ad, or screen a full email with sender and link analysis. The helper extension adds a one click Check this email button inside Gmail and Outlook." />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1.2fr) minmax(300px, 1fr)', gap: 16, alignItems: 'start' }}>
         <Reveal>
           <div className="card">
-            <Field label="Message or job ad text">
-              <textarea className="input" rows={9} placeholder={'Paste the full message here. Include any links exactly as they appear.\n\nExample: Congratulations! You are selected. Pay the registration fee of Rs 499 to confirm...'} value={text} onChange={(e) => setText(e.target.value)} />
-            </Field>
-            <div style={{ marginTop: 12 }}>
-              <Field label="Company the sender claims to be (optional)" hint="Helps detect link domains that do not match the claimed employer">
-                <input className="input" value={claimed} onChange={(e) => setClaimed(e.target.value)} placeholder="e.g. Infosys" />
-              </Field>
+            <div className="tabs" style={{ marginBottom: 14 }}>
+              <button className={`tab ${mode === 'text' ? 'on' : ''}`} onClick={() => { setMode('text'); setResult(null); }}><ScanSearch size={13} style={{ verticalAlign: '-2px' }} /> Message or job ad</button>
+              <button className={`tab ${mode === 'email' ? 'on' : ''}`} onClick={() => { setMode('email'); setResult(null); }}><Mail size={13} style={{ verticalAlign: '-2px' }} /> Full email</button>
             </div>
-            <button className="btn primary" style={{ marginTop: 14 }} onClick={analyze} disabled={busy || text.trim().length < 20}>
+
+            {mode === 'email' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+                <Field label="From (sender)"><input className="input" value={from} onChange={(e) => setFrom(e.target.value)} placeholder="HR Team <hr@company.com>" /></Field>
+                <Field label="Reply to (if visible)"><input className="input" value={replyTo} onChange={(e) => setReplyTo(e.target.value)} placeholder="different@mailbox.com" /></Field>
+                <Field label="Subject"><input className="input" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="URGENT: Confirm interview today" /></Field>
+                <Field label="Company the sender claims"><input className="input" value={claimed} onChange={(e) => setClaimed(e.target.value)} placeholder="e.g. Infosys" /></Field>
+              </div>
+            )}
+            {mode === 'text' && (
+              <Field label="Company the sender claims (optional)" hint="Helps detect link and domain mismatches">
+                <input className="input" value={claimed} onChange={(e) => setClaimed(e.target.value)} placeholder="e.g. Infosys" style={{ marginBottom: 12 }} />
+              </Field>
+            )}
+
+            <Field label={mode === 'email' ? 'Email body (links in it are analyzed too)' : 'Message or job ad text'}>
+              <textarea className="input" rows={mode === 'email' ? 8 : 9} placeholder={mode === 'email' ? 'Paste the full email body here, including any links exactly as they appear.' : 'Paste the full message here. Include any links exactly as they appear.'} value={text} onChange={(e) => setText(e.target.value)} />
+            </Field>
+            <button className="btn primary" style={{ marginTop: 14 }} onClick={analyze} disabled={busy || !ready}>
               {busy ? <Spinner /> : <ScanSearch size={14} />} Run the screen
             </button>
           </div>
@@ -77,7 +104,10 @@ export default function Scam() {
                     </motion.div>
                     <div>
                       <Chip tone={sev.tone}>{sev.label}</Chip>
-                      <p style={{ fontSize: 12, color: 'var(--faint)', marginTop: 6 }}>{result.flags.length} indicator{result.flags.length === 1 ? '' : 's'} out of 18 checked</p>
+                      <p style={{ fontSize: 12, color: 'var(--faint)', marginTop: 6 }}>
+                        {result.flags.length} indicator{result.flags.length === 1 ? '' : 's'}{result.sender ? ` · from ${result.sender.address || 'unknown sender'}` : ''}
+                      </p>
+                      {result.linksChecked > 0 && <p style={{ fontSize: 11, color: 'var(--faint)' }}>{result.linksChecked} link{result.linksChecked > 1 ? 's' : ''} inspected</p>}
                     </div>
                   </div>
                   <div style={{ margin: '14px 0' }}><Bar pct={result.score} color={danger ? 'linear-gradient(90deg,#fb4d4d,#ff8a3d)' : undefined} /></div>
@@ -85,7 +115,7 @@ export default function Scam() {
                   {result.flags.length > 0 && (
                     <div style={{ display: 'grid', gap: 7 }}>
                       {result.flags.map((f, i) => (
-                        <motion.div key={f.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.07 }} className="card" style={{ padding: '9px 12px', borderColor: f.critical ? 'rgba(251,77,77,0.4)' : 'var(--border)' }}>
+                        <motion.div key={f.id + String(i)} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.07 }} className="card" style={{ padding: '9px 12px', borderColor: f.critical ? 'rgba(251,77,77,0.4)' : 'var(--border)' }}>
                           <strong style={{ fontSize: 12.5, display: 'flex', justifyContent: 'space-between' }}>
                             <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}>{f.critical && <AlertTriangle size={12} color="var(--red)" />}{f.label}</span>
                             <span className="mono" style={{ color: 'var(--molten)' }}>+{f.weight}</span>
@@ -101,7 +131,7 @@ export default function Scam() {
                   <ul style={{ margin: '8px 0 0', paddingLeft: 18, fontSize: 12.5, color: 'var(--muted)', display: 'grid', gap: 5 }}>
                     {result.steps.map((s, i) => <li key={i}>{s}</li>)}
                   </ul>
-                  {result.blocks.length > 0 && (
+                  {result.blocks?.length > 0 && (
                     <div className="chip red" style={{ marginTop: 12, whiteSpace: 'normal', height: 'auto', padding: '8px 12px', display: 'block' }}>
                       {result.blocks.join(' ')}
                     </div>
@@ -121,7 +151,8 @@ export default function Scam() {
             {log.map((l) => (
               <div key={l.id} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '8px 0', borderBottom: '1px dashed rgba(255,255,255,0.06)' }}>
                 <Chip tone={SEVERITY[l.result.severity]?.tone}>{l.result.score}</Chip>
-                <span style={{ fontSize: 12.5, color: 'var(--muted)', flex: 1, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{l.text.slice(0, 110)}</span>
+                {l.kind === 'email' && <Chip tone="cyan">email</Chip>}
+                <span style={{ fontSize: 12.5, color: 'var(--muted)', flex: 1, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{(l.from ? `${l.from}: ` : '') + String(l.text).slice(0, 100)}</span>
                 <span style={{ fontSize: 11, color: 'var(--faint)' }}>{timeAgo(l.at)}</span>
               </div>
             ))}

@@ -61,13 +61,13 @@ Every job carries a score out of 100 built from seven transparent components wit
 Add any Greenhouse, Lever, or Ashby company by pasting its careers URL: the provider and board handle are detected automatically and the board is probed live before saving. A coverage dashboard distinguishes zero matching jobs from a source that could not be checked, and every refresh run is logged with what changed.
 
 ### Scam and impersonation screening
-Paste any suspicious message: eighteen weighted indicators, a risk band, per indicator advice, and a private log. Payment demands block automated action regardless of how good the role looks. A WhatsApp contact alone is never declared fraudulent.
+Paste any suspicious message, or screen a full email with sender, reply to, and link analysis: eighteen plus weighted indicators including reply to mismatches, free mailbox recruiters, lookalike sender domains, and link text that lies about its destination. The Helper adds a one click Check this email button inside Gmail and Outlook that shows a verdict on the open email, right there in the mailbox. Payment demands block automated action regardless of how good the role looks. A WhatsApp contact alone is never declared fraudulent.
 
 ### Relocation economics
 Cautious, base, and favorable scenarios compute monthly surplus, savings margin, and the gap over staying in Pune. Deposits and moving costs are liquidity, never laundered into monthly expenses. Undisclosed pay produces affordability unknown plus the exact questions to ask the recruiter.
 
-### Honest tracking
-Applications move through a real state machine. Submissions count only with receipt evidence, duplicates are blocked, and pause semantics are real.
+### Honest tracking with rounds and reminders
+A kanban that organizes itself live: forging a packet moves a role to preparing on its own, scheduling an interview round moves it to interview, and a receipt makes the submission count. Every round joins the Today radar with a countdown, and a browser reminder fires an hour before. Submissions count only with receipt evidence, duplicates are blocked, and pause semantics are real.
 
 ### Cover letters, referral messages, and autofill memory
 Forge a packet per role and get a tailored cover letter that reads your resume against the job description, plus a referral request message of about one hundred characters ready to send to any employee at that company on LinkedIn or Naukri. Both are grounded strictly in your resume facts, both copy with one click, and anything your resume cannot support becomes a question instead of an invention. The Helper extension remembers every value it fills, and the saved autofill data is editable in the app under Settings and inside the extension itself, so a wrong value is fixed once and never autofills wrong again.
@@ -135,6 +135,6 @@ Demonstrated skill fit 30, responsibility fit 20, experience fit 15, location fi
 
 21 tests run on every npm test: classification edges (sales at a software company excluded, engineering at a bank matched, ambiguous titles routed to review), synonym matching without fabrication, Pune outranking equal relocation roles, unknown pay handling, scam blocking, duplicate protection, cross source merge with provenance, deposit separation, and the new refresh engine: one missed check never closes a role, two do, reposts reopen automatically, and new postings never duplicate. The seeded registry itself is test asserted to be structurally genuine.
 
-## License
+## License and the road ahead
 
-MIT. See LICENSE and THIRD_PARTY_NOTICES.md.
+MIT. See LICENSE and THIRD_PARTY_NOTICES.md. This project is open core: the local edition is free forever, and a subsidized hosted edition may arrive once the community asks for it, with the full commitment in [docs/BUSINESS_MODEL.md](docs/BUSINESS_MODEL.md), including the written promise that self hosting stays free and user data is never sold, read, or trained on. If JobForge saved you time, a star on the repository is the best support there is.

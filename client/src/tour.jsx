@@ -36,7 +36,7 @@ const STEPS = [
   {
     route: '/scam',
     title: 'Fraud screening before you trust anything',
-    body: 'Paste any WhatsApp forward or email here. Eighteen indicators cover fee demands, UPI traps, guaranteed placement hooks and fake links. A payment demand blocks automated action no matter how perfect the job looks. This screen has already saved people from real money loss.'
+    body: 'Paste any WhatsApp forward or email here, or switch to the full email mode for sender, reply to, and link analysis. With the helper, a one click button inside Gmail and Outlook screens the open email and shows a verdict on the spot. A payment demand blocks automated action no matter how perfect the job looks. This screen has already saved people from real money loss.'
   },
   {
     route: '/relocation',
@@ -45,8 +45,8 @@ const STEPS = [
   },
   {
     route: '/tracker',
-    title: 'Every application, honestly tracked',
-    body: 'Applications move through a real state machine. A submission only counts when a receipt backs it, duplicates are blocked, and revoking authorization stops everything queued. Your pipeline, your proof.'
+    title: 'A board that organizes itself',
+    body: 'Applications move through a real state machine, and the kanban organizes itself live: forging a packet moves a role to preparing, scheduling an interview round moves it to interview, a receipt makes the submission count. Add each round with its time and the Today radar counts down to it, with a browser reminder an hour before. Duplicates are blocked, and revoking authorization stops everything queued.'
   },
   {
     route: '/settings',
