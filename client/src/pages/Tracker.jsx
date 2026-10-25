@@ -87,8 +87,8 @@ export default function Tracker() {
 
   return (
     <div>
-      <SectionHead kicker="Pipeline" title="Every application, one honest timeline"
-        sub="The board organizes itself: forging a packet moves a role to preparing, scheduling a round moves it to interview, a receipt makes a submission count. You can still move anything by hand."
+      <SectionHead kicker="Pipeline" title="Your pipeline, organized"
+        sub="The board moves cards on its own: forging a packet moves a role to preparing, scheduling a round moves it to interview, a receipt makes the submission count. Manual moves still work whenever you want them."
         right={
           <span className="chip cyan" style={{ gap: 7 }}>
             <Radio size={11} className="live-dot" /> live · synced {lastSync?.toLocaleTimeString('en-IN', { timeStyle: 'short' })}

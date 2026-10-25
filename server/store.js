@@ -65,7 +65,7 @@ export const DEFAULT_SETTINGS = {
   extensionToken: null,
   accessCode: null,
   adminCode: null,
-  openAccess: false,
+  openAccess: true,
   onboarded: false
 };
 

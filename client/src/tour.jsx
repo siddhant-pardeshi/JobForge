@@ -56,7 +56,7 @@ const STEPS = [
   {
     route: '/settings',
     title: 'Pair the browser extension',
-    body: 'Copy the extension token from Settings, load the JobForge Helper folder into Chrome, and browse LinkedIn or Naukri as you always do. A single click on any posting captures it into this cockpit, scored and scam screened instantly. The helper also prefills application forms from your approved answers, and it never presses submit for you, because keeping your accounts safe matters more than saving one click.'
+    body: 'Copy the extension token from Settings, load the JobForge Helper folder into Chrome, and browse LinkedIn or Naukri as you always do. A single click on any posting captures it into this cockpit, scored and scam screened instantly. The helper also prefills application forms from your approved answers. The last click, the one that submits, stays with you. Your accounts are worth more than a saved click.'
   }
 ];
 

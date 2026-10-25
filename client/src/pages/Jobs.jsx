@@ -93,7 +93,7 @@ export default function Jobs() {
       <SectionHead
         kicker="Opportunity explorer"
         title="Every opening, scored and explained"
-        sub="Ranked by seven transparent components. Filtered out lanes are never hidden, so you can always audit why something was excluded."
+        sub="Seven weighted components per score. Every exclusion stays visible in its lane, so you can always check why something was filtered."
         right={
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <button className="btn sm" onClick={() => setImportOpen(true)}><ClipboardPaste size={14} /> Paste a job</button>

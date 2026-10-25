@@ -139,9 +139,9 @@ app.listen(PORT, () => {
   console.log(`[jobforge] API ready on http://localhost:${PORT}`);
   const settings = load('settings') || {};
   if (settings.publicMode) {
-    if (settings.openAccess) console.log('[jobforge] OPEN ACCESS: everyone with the link can use this cockpit.');
-    else console.log(`[jobforge] PRIVATE: visitors must enter access code ${settings.accessCode}. Flip the switch in Settings, Access, anytime.`);
-    console.log(`[jobforge] Admin code for remote control: ${settings.adminCode}`);
+    if (settings.openAccess) console.log('[jobforge] OPEN ACCESS: everyone with the link can use this cockpit. Flip to private anytime in Settings, Access.');
+    else console.log(`[jobforge] PRIVATE: visitors must enter access code ${settings.accessCode}.`);
+    console.log(`[jobforge] Admin code for the access switch: ${settings.adminCode}`);
   }
   if (!fs.existsSync(dist)) console.log('[jobforge] Development mode: run "npm run dev" so the Vite client serves the interface on http://localhost:5173');
 });
