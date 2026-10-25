@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Globe2, Clock3, Ban, ShieldAlert, Link2, Layers3, Flame } from 'lucide-react';
+import { MapPin, Globe2, Clock3, Ban, ShieldAlert, Link2, Layers3, Flame, Sparkles } from 'lucide-react';
 import { TiltCard, ScoreRing, Chip, Stagger } from './ui.jsx';
 import { lpa, timeAgo } from './api.js';
 
@@ -59,7 +59,8 @@ export function JobCard({ job, onOpen, index = 0 }) {
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', gap: 8, flexWrap: 'wrap' }}>
           <LaneChip lane={match?.lane} stretch={match?.stretch} />
-          {job.source?.type === 'demo' && <Chip tone="violet">demo</Chip>}
+          {job.status === 'closed' && <Chip tone="red"><Ban size={10} /> closed</Chip>}
+          {job.source?.type === 'extension' && <Chip tone="violet"><Sparkles size={10} /> captured</Chip>}
           {(job.scamScore || 0) >= 40 && <Chip tone="red"><ShieldAlert size={10} /> scam risk</Chip>}
           {job.bond?.status === 'employer_confirmed' && <Chip tone="amber">bond</Chip>}
         </div>

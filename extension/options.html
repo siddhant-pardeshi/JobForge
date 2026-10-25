@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>JobForge Helper</title>
+  <style>
+    body { width: 340px; margin: 0; padding: 18px; font-family: 'Inter', -apple-system, sans-serif; background: #0a0a12; color: #f5f3ef; }
+    h1 { font-size: 16px; margin: 0 0 4px; display: flex; align-items: center; gap: 8px; }
+    .mark { width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(120deg, #ff5c1a, #ff2e88 55%, #8b5cf6); display: inline-block; }
+    p { font-size: 12px; color: #a09bae; margin: 10px 0 14px; line-height: 1.55; }
+    label { display: block; font-size: 10.5px; text-transform: uppercase; letter-spacing: .1em; color: #6b6779; margin-bottom: 5px; }
+    input { width: 100%; box-sizing: border-box; padding: 9px 11px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.35); color: #f5f3ef; font-size: 12.5px; outline: none; }
+    input:focus { border-color: #ff5c1a; }
+    button { margin-top: 12px; width: 100%; padding: 10px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px; color: #fff; background: linear-gradient(120deg, #ff5c1a, #ff2e88 55%, #8b5cf6); }
+    button.ghost { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.16); }
+    #status { margin-top: 10px; font-size: 12px; min-height: 16px; }
+    #status.ok { color: #8af0c8; }
+    #status.err { color: #ffa2a2; }
+  </style>
+</head>
+<body>
+  <h1><span class="mark"></span> JobForge Helper</h1>
+  <p>
+    Paste the extension token from JobForge Settings to pair this browser with your local cockpit.
+    The helper talks only to your own machine.
+  </p>
+  <label for="server">Server address</label>
+  <input id="server" placeholder="http://localhost:8787" />
+  <label for="token" style="margin-top:12px">Extension token</label>
+  <input id="token" placeholder="jf_..." />
+  <button id="save">Pair with JobForge</button>
+  <button id="test" class="ghost">Test connection</button>
+  <div id="status"></div>
+  <p style="margin-top:14px; font-size:10.5px; color:#6b6779;">
+    The helper captures postings you choose and prefills forms from your approved answers.
+    It never submits anything and never reads pages you have not opened.
+  </p>
+  <script src="options.js"></script>
+</body>
+</html>

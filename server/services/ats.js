@@ -140,7 +140,8 @@ export async function fetchLever(handle, companyName) {
 
 export async function fetchAshby(handle, companyName) {
   if (!HANDLE_PATTERN.test(handle)) throw new Error('That board name contains characters Ashby does not use');
-  const data = await fetchJson(`https://api.ashbyhq.com/posting-api/job-board/${encodeURIComponent(handle)}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+  // Ashby's posting API answers GET requests; POST bodies were retired by the platform.
+  const data = await fetchJson(`https://api.ashbyhq.com/posting-api/job-board/${encodeURIComponent(handle)}`);
   const jobs = (data.jobs || []).map((j) => {
     const description = j.descriptionPlain || stripHtml(j.descriptionHtml) || '';
     return baseJob({

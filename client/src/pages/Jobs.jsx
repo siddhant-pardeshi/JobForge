@@ -14,7 +14,8 @@ const TABS = [
   { id: 'relocation', label: 'Relocation' },
   { id: 'stretch', label: 'Stretch' },
   { id: 'needs_verification', label: 'Needs verification' },
-  { id: 'excluded', label: 'Filtered out' }
+  { id: 'excluded', label: 'Filtered out' },
+  { id: 'closed', label: 'Closed or redacted' }
 ];
 
 export default function Jobs() {
@@ -57,9 +58,11 @@ export default function Jobs() {
   const jobs = (data?.jobs || []).filter((j) => {
     if (!j.match) return tab === 'excluded';
     let pass = true;
-    if (tab === 'all') pass = j.match.lane !== 'excluded';
-    else if (tab === 'stretch') pass = j.match.lane !== 'excluded' && j.match.stretch;
-    else pass = j.match.lane === tab;
+    if (tab === 'all') pass = j.match.lane !== 'excluded' && j.status !== 'closed';
+    else if (tab === 'stretch') pass = j.match.lane !== 'excluded' && j.match.stretch && j.status !== 'closed';
+    else if (tab === 'closed') pass = j.status === 'closed';
+    else if (tab === 'excluded') pass = j.match.lane === 'excluded' && j.status !== 'closed';
+    else pass = j.match.lane === tab && j.status !== 'closed';
     if (pass && q) pass = `${j.title} ${j.company?.name} ${j.city || ''}`.toLowerCase().includes(q.toLowerCase());
     if (pass && minScore > 0) pass = (j.match?.score || 0) >= minScore;
     return pass;
@@ -67,17 +70,11 @@ export default function Jobs() {
 
   const laneCount = (id) => {
     const list = data?.jobs || [];
-    if (id === 'all') return list.filter((j) => j.match && j.match.lane !== 'excluded').length;
-    if (id === 'stretch') return list.filter((j) => j.match && j.match.lane !== 'excluded' && j.match.stretch).length;
-    return list.filter((j) => j.match?.lane === id).length;
-  };
-
-  const applyDemo = async (job) => {
-    try {
-      const res = await api(`/jobs/${job.id}/apply-demo`, { method: 'POST' });
-      toast(`Synthetic submission recorded. Receipt ${res.application.receipt.reference}`, 'ok');
-      close();
-    } catch (e) { toast(e.message, 'err'); }
+    if (id === 'all') return list.filter((j) => j.match && j.match.lane !== 'excluded' && j.status !== 'closed').length;
+    if (id === 'stretch') return list.filter((j) => j.match && j.match.lane !== 'excluded' && j.match.stretch && j.status !== 'closed').length;
+    if (id === 'closed') return list.filter((j) => j.status === 'closed').length;
+    if (id === 'excluded') return list.filter((j) => j.match?.lane === 'excluded' && j.status !== 'closed').length;
+    return list.filter((j) => j.match?.lane === id && j.status !== 'closed').length;
   };
 
   const makePacket = async (job) => {
@@ -125,7 +122,7 @@ export default function Jobs() {
       {!data && <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>{[1, 2, 3, 4].map((i) => <div key={i} className="shimmer" style={{ height: 190 }} />)}</div>}
 
       {data && jobs.length === 0 && (
-        <Empty icon={<Compass size={24} color="var(--molten)" />} title="Nothing in this lane" sub="Fetch from sources, paste a job description, or relax the filters. Demo mode may also be off." action={<button className="btn primary sm" onClick={() => setImportOpen(true)}><ClipboardPaste size={13} /> Import a job</button>} />
+        <Empty icon={<Compass size={24} color="var(--molten)" />} title="Nothing in this lane" sub="Refresh your sources, paste a job description, or relax the filters. Live boards update themselves on the schedule." action={<button className="btn primary sm" onClick={() => setImportOpen(true)}><ClipboardPaste size={13} /> Import a job</button>} />
       )}
 
       <motion.div layout style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>
@@ -152,7 +149,7 @@ export default function Jobs() {
       )}
 
       <Drawer open={!!openId} onClose={close}>
-        {detail ? <JobDetail detail={detail} packet={packet} packetBusy={packetBusy} onPacket={() => makePacket(detail.job)} onApplyDemo={() => applyDemo(detail.job)} onFeedback={async (action, note) => {
+        {detail ? <JobDetail detail={detail} packet={packet} packetBusy={packetBusy} onPacket={() => makePacket(detail.job)} onFeedback={async (action, note) => {
           try { await api(`/jobs/${detail.job.id}/action`, { method: 'POST', body: { action, note } }); toast('Feedback recorded. Actions on imported jobs are stored', 'ok'); } catch (e) { toast(e.message, 'err'); }
         }} onClose={close} /> : <div className="shimmer" style={{ height: 400 }} />}
       </Drawer>
@@ -162,7 +159,7 @@ export default function Jobs() {
   );
 }
 
-function JobDetail({ detail, packet, packetBusy, onPacket, onApplyDemo, onFeedback, onClose }) {
+function JobDetail({ detail, packet, packetBusy, onPacket, onFeedback, onClose }) {
   const { job, interviewReports, dossier } = detail;
   const m = job.match;
   const toast = useToast();
@@ -185,7 +182,17 @@ function JobDetail({ detail, packet, packetBusy, onPacket, onApplyDemo, onFeedba
         <Chip><Clock3 /> {timeAgo(job.postedAt)}</Chip>
         {deadline !== null && <Chip tone={deadline <= 3 ? 'red' : 'amber'}><CalendarClock size={10} /> {deadline >= 0 ? `${deadline} days to deadline` : 'deadline passed'}</Chip>}
         {job.seenOnMultipleSources && <Chip tone="violet"><Layers3 size={10} /> merged from {job.sources?.length} sources</Chip>}
+        {job.status === 'closed' && <Chip tone="red"><Ban size={10} /> closed or redacted from the board</Chip>}
       </div>
+
+      {job.status === 'closed' && (
+        <div className="card" style={{ borderColor: 'rgba(251,77,77,0.55)', background: 'rgba(251,77,77,0.07)', marginBottom: 16 }}>
+          <strong style={{ color: '#ffa2a2', display: 'flex', gap: 7, alignItems: 'center' }}><Ban size={15} /> This posting left the official board</strong>
+          <p style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 6 }}>
+            The employer removed it or filled it. JobForge only marks a role closed after two consecutive refreshes confirm it is gone, so transient board glitches never fake a closure. If it reappears, the role reopens automatically.
+          </p>
+        </div>
+      )}
 
       {(job.scamScore || 0) >= 40 && (
         <div className="card" style={{ borderColor: 'rgba(251,77,77,0.55)', background: 'rgba(251,77,77,0.07)', marginBottom: 16 }}>
@@ -241,7 +248,7 @@ function JobDetail({ detail, packet, packetBusy, onPacket, onApplyDemo, onFeedba
 
       {(interviewReports?.length > 0 || dossier) && (
         <div className="card" style={{ marginTop: 16 }}>
-          <strong style={{ display: 'flex', gap: 7, alignItems: 'center', marginBottom: 8 }}><GraduationCap size={15} color="var(--cyan)" /> Interview intel {job.source?.type === 'demo' && <Chip tone="violet">synthetic</Chip>}</strong>
+          <strong style={{ display: 'flex', gap: 7, alignItems: 'center', marginBottom: 8 }}><GraduationCap size={15} color="var(--cyan)" /> Interview intel</strong>
           {dossier && <p style={{ fontSize: 12.5, color: 'var(--muted)', marginBottom: 6 }}>{dossier.sector} · {dossier.engineering}</p>}
           {interviewReports.map((r, i) => (
             <p key={i} style={{ fontSize: 12.5, color: 'var(--muted)' }}>· {r.stages} <em style={{ color: 'var(--faint)' }}>({r.mode}, {r.reportedBy})</em></p>
@@ -250,12 +257,13 @@ function JobDetail({ detail, packet, packetBusy, onPacket, onApplyDemo, onFeedba
       )}
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '22px 0 8px' }}>
-        <button className="btn primary sm" onClick={onPacket} disabled={packetBusy}>{packetBusy ? <Spinner /> : <Wand2 size={13} />} Forge application packet</button>
+        <button className="btn primary sm" onClick={onPacket} disabled={packetBusy || job.status === 'closed'}>{packetBusy ? <Spinner /> : <Wand2 size={13} />} Forge application packet</button>
         {job.applyUrl && <a className="btn sm" href={job.applyUrl} target="_blank" rel="noreferrer"><ExternalLink size={13} /> Open official posting</a>}
-        {job.source?.type === 'demo' && <button className="btn sm" onClick={onApplyDemo}><FileDown size={13} /> Apply via demo adapter</button>}
         <button className="btn ghost sm" onClick={() => onFeedback('skip')}><Ban size={13} /> Not for me</button>
       </div>
-      {job.source?.type === 'demo' && <p style={{ fontSize: 11.5, color: 'var(--faint)' }}>Demo mode: the apply button runs a synthetic form adapter and touches no real employer.</p>}
+      <p style={{ fontSize: 11.5, color: 'var(--faint)' }}>
+        Submission always happens on the employer's own page, with the JobForge Helper extension prefilling your approved answers when installed. Nothing is ever submitted without your final click.
+      </p>
 
       {packet && (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card" style={{ marginTop: 18 }}>

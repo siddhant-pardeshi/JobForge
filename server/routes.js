@@ -2,15 +2,17 @@ import express from 'express';
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { load, save, id, bootstrap, resumeDir, DATA_DIR, DEFAULT_SETTINGS, DEFAULT_ANSWERS } from './store.js';
 import { extractText, draftProfile } from './services/parser.js';
-import { scoreJob, mergeDuplicates, classify, parseExperience } from './services/scoring.js';
+import { scoreJob, mergeDuplicates, parseExperience, classify } from './services/scoring.js';
 import { analyzeScam } from './services/scam.js';
 import { fetchFromProvider, verifyBoard, ATS_PROVIDERS } from './services/ats.js';
 import { PRESETS, llmStatus, testProvider } from './services/llm.js';
 import { buildPacket, booleanStrings } from './services/tailoring.js';
 import { evaluateOffer, DEFAULT_BUDGETS, BUDGET_CATEGORIES } from './services/relocation.js';
-import { buildDemoJobs, DEMO_INTERVIEW_REPORTS, DEMO_COMPANY_NOTES } from './demo.js';
+import { fetchAllSources, runSource } from './services/refresh.js';
+import { SEED_COMPANIES, SEED_META, parseCareersUrl } from './seedRegistry.js';
 
 const router = express.Router();
 const upload = multer({
@@ -22,7 +24,6 @@ const upload = multer({
   }
 });
 
-// async handler wrapper
 const ah = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
 function getSettings() { return load('settings') || { ...DEFAULT_SETTINGS }; }
@@ -39,61 +40,81 @@ function maskSettings(settings) {
   return clone;
 }
 
-// Scan unverified text sources for fraud indicators once per job instance.
-function prepareJob(job) {
-  if (!job.scamScore && job.scamScore !== 0) job.scamScore = 0;
-  if (job.source?.type === 'demo' || job.source?.type === 'imported') {
-    const result = analyzeScam(job.description, { claimedCompany: job.company?.name });
-    job.scamScore = result.score;
-    job.scamFlags = result.flags;
-  }
-  if (!job.experienceRange?.text) {
-    const parsed = parseExperience(`${job.title} ${job.description}`);
-    job.experienceRange = parsed;
-  }
-  return job;
+// ---- scoring cache: scores are pure over (job state, profile state, weights)
+const scoreCache = new Map();
+function profileSignature(profile) {
+  if (!profile) return 'noprofile';
+  return [profile.extractedAt, JSON.stringify(profile.weights), (profile.skills || []).length, (profile.resumeText || '').length, JSON.stringify(profile.roleFamilies)].join('~');
 }
 
 function assembleJobs() {
-  const settings = getSettings();
-  const real = (load('jobs') || []).map((j) => prepareJob({ ...j }));
-  const demo = settings.demoMode ? buildDemoJobs().map((j) => prepareJob(j)) : [];
-  return mergeDuplicates([...real, ...demo]);
+  const real = load('jobs') || [];
+  return mergeDuplicates(real.map((j) => prepareJob({ ...j })));
+}
+
+function prepareJob(job) {
+  if (job.scamScore === undefined || job.scamScore === null) job.scamScore = 0;
+  if (job.source?.type === 'extension' || job.source?.type === 'imported') {
+    if (!job.scannedAt) {
+      const result = analyzeScam(job.description, { claimedCompany: job.company?.name });
+      job.scamScore = result.score;
+      job.scamFlags = result.flags;
+      job.scannedAt = new Date().toISOString();
+    }
+  }
+  if (!job.experienceRange?.text) {
+    job.experienceRange = parseExperience(`${job.title} ${job.description}`);
+  }
+  if (!job.classification) job.classification = classify(job);
+  return job;
 }
 
 function scoreAll(profile) {
-  if (!profile) {
-    return assembleJobs().map((job) => ({ ...job, match: null, unscorable: true }));
-  }
-  return assembleJobs()
+  const sig = profileSignature(profile);
+  const jobs = assembleJobs();
+  return jobs
     .map((job) => {
-      const match = scoreJob(job, profile, profile.weights);
+      const key = `${job.id}:${job.lastSeen}:${job.status}:${sig}`;
+      let match = scoreCache.get(key);
+      if (!match) {
+        match = profile ? scoreJob(job, profile, profile.weights) : null;
+        if (match) scoreCache.set(key, match);
+        if (scoreCache.size > 12000) scoreCache.clear();
+      }
       return { ...job, match };
     })
     .sort((a, b) => (b.match?.score || 0) - (a.match?.score || 0));
 }
 
-// ---------- bootstrap ----------
+// Warm the cache after refreshes so the next UI load is instant.
+function warmScores() {
+  try { scoreAll(getProfile()); } catch { /* warming is best effort */ }
+}
+
+// ---- bootstrap ----
 router.get('/bootstrap', ah(async (req, res) => {
   const settings = getSettings();
+  const companies = load('companies') || [];
   res.json({
     profile: getProfile(),
     settings: maskSettings(settings),
     answers: load('answers') || DEFAULT_ANSWERS,
     llm: llmStatus(settings),
-    demoMode: !!settings.demoMode,
     presets: PRESETS,
     atsProviders: ATS_PROVIDERS,
-    storageDir: DATA_DIR
+    storageDir: DATA_DIR,
+    refresh: settings.refresh || DEFAULT_SETTINGS.refresh,
+    extensionToken: settings.extensionToken || '',
+    seedMeta: SEED_META,
+    sourceCount: companies.length
   });
 }));
 
-// ---------- resume ----------
+// ---- resume ----
 router.post('/resume', upload.single('file'), ah(async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file received' });
   const parsed = await extractText(req.file.buffer, req.file.originalname);
   const draft = draftProfile(parsed.text, req.file.originalname);
-  // Keep the original file locally under the private data folder.
   const outPath = path.join(resumeDir(), `resume-${Date.now()}${path.extname(req.file.originalname).toLowerCase()}`);
   fs.writeFileSync(outPath, req.file.buffer);
   res.json({ draft, warning: parsed.warning, scanned: parsed.scanned, storedAs: path.basename(outPath) });
@@ -106,7 +127,7 @@ router.post('/resume/text', ah(async (req, res) => {
   res.json({ draft, warning: null, scanned: false, storedAs: null });
 }));
 
-// ---------- profile ----------
+// ---- profile ----
 router.put('/profile', ah(async (req, res) => {
   const existing = getProfile();
   const incoming = { ...req.body };
@@ -118,22 +139,24 @@ router.put('/profile', ah(async (req, res) => {
   res.json({ ok: true, profile: incoming });
 }));
 
-// ---------- jobs ----------
+// ---- jobs ----
 router.get('/jobs', ah(async (req, res) => {
   const profile = getProfile();
   const jobs = scoreAll(profile);
-  const lanes = { best_pune: 0, remote: 0, relocation: 0, stretch: 0, needs_verification: 0, excluded: 0 };
-  for (const j of jobs) if (j.match && lanes[j.match.lane] !== undefined) lanes[j.match.lane]++;
-  res.json({ jobs, lanes, total: jobs.length });
+  const lanes = { best_pune: 0, remote: 0, relocation: 0, stretch: 0, needs_verification: 0, excluded: 0, closed: 0 };
+  for (const j of jobs) {
+    if (!j.match) continue;
+    if (j.status === 'closed') lanes.closed++;
+    else if (lanes[j.match.lane] !== undefined) lanes[j.match.lane]++;
+  }
+  res.json({ jobs, lanes, total: jobs.length, scoredAt: new Date().toISOString() });
 }));
 
 router.get('/jobs/:id', ah(async (req, res) => {
   const profile = getProfile();
   const job = scoreAll(profile).find((j) => j.id === req.params.id);
   if (!job) return res.status(404).json({ error: 'That job is not in your pipeline anymore' });
-  const reports = job.source?.type === 'demo' ? DEMO_INTERVIEW_REPORTS.filter((r) => r.companyId === job.companyRef || job.company?.domain?.startsWith(r.companyId)) : [];
-  const dossier = job.source?.type === 'demo' ? DEMO_COMPANY_NOTES[job.companyRef] || null : null;
-  res.json({ job, interviewReports: reports, dossier, booleanStrings: booleanStrings(profile || {}) });
+  res.json({ job, booleanStrings: booleanStrings(profile || {}) });
 }));
 
 router.post('/jobs/import', ah(async (req, res) => {
@@ -171,6 +194,7 @@ router.post('/jobs/import', ah(async (req, res) => {
   const scan = analyzeScam(text, { claimedCompany: company.name });
   job.scamScore = scan.score;
   job.scamFlags = scan.flags;
+  job.scannedAt = job.firstSeen;
   const jobs = load('jobs') || [];
   jobs.push(job);
   save('jobs', jobs);
@@ -178,45 +202,32 @@ router.post('/jobs/import', ah(async (req, res) => {
   res.json({ ok: true, id: job.id, match, scan });
 }));
 
+// Refresh every enabled board now.
 router.post('/jobs/fetch', ah(async (req, res) => {
-  const companies = (load('companies') || []).filter((c) => ['greenhouse', 'lever', 'ashby'].includes(c.atsProvider));
-  const report = [];
-  const allJobs = load('jobs') || [];
-  let added = 0;
-  for (const company of companies) {
-    const run = { companyId: company.id, company: company.name, at: new Date().toISOString(), ok: false, found: 0, added: 0, message: '' };
-    try {
-      const { jobs } = await fetchFromProvider(company.atsProvider, company.handle, company.name);
-      const existingIds = new Set(allJobs.map((j) => j.externalId));
-      for (const job of jobs) {
-        if (existingIds.has(job.externalId)) continue;
-        allJobs.push(job);
-        added++;
-      }
-      run.ok = true;
-      run.found = jobs.length;
-      run.added = added;
-      run.message = `${jobs.length} live postings, ${added} new`;
-    } catch (err) {
-      run.message = err.message || 'The source could not be checked';
-    }
-    report.push(run);
-    const allRuns = load('sourceRuns') || [];
-    allRuns.push(run);
-    save('sourceRuns', allRuns.slice(-200));
+  const report = await fetchAllSources();
+  const added = report.reduce((a, r) => a + (r.added || 0), 0);
+  const closed = report.reduce((a, r) => a + (r.closed || 0), 0);
+  if (report.length === 0) {
+    report.push({ company: 'No live sources yet', at: new Date().toISOString(), ok: false, found: 0, added: 0, message: 'The verified registry seeds itself on first launch. Give it a moment, or add a Greenhouse, Lever, or Ashby board on the Sources page' });
   }
-  if (companies.length === 0) {
-    report.push({ company: 'No live sources yet', at: new Date().toISOString(), ok: false, found: 0, added: 0, message: 'Add a Greenhouse, Lever, or Ashby board on the Sources page to start real discovery' });
-  }
-  save('jobs', allJobs);
-  res.json({ ok: true, report, added });
+  warmScores();
+  res.json({ ok: true, report, added, closed });
+}));
+
+// Refresh one source now.
+router.post('/jobs/fetch/:companyId', ah(async (req, res) => {
+  const company = (load('companies') || []).find((c) => c.id === req.params.companyId);
+  if (!company) return res.status(404).json({ error: 'Source not found' });
+  if (!['greenhouse', 'lever', 'ashby'].includes(company.atsProvider)) return res.status(400).json({ error: 'This source has no listing adapter' });
+  const run = await runSource(company);
+  res.json({ ok: run.ok, run });
 }));
 
 router.post('/jobs/:id/action', ah(async (req, res) => {
   const { action, note } = req.body || {};
   const jobs = load('jobs') || [];
   const job = jobs.find((j) => j.id === req.params.id);
-  if (!job) return res.status(404).json({ error: 'Only imported jobs accept stored actions. Demo and ATS listings are read only and refresh from source' });
+  if (!job) return res.status(404).json({ error: 'Only imported and captured jobs accept stored actions' });
   job.userAction = action;
   job.userNote = note || null;
   job.actionAt = new Date().toISOString();
@@ -238,36 +249,7 @@ router.post('/jobs/:id/packet', ah(async (req, res) => {
   res.json({ ok: true, packetId: stored.id, packet });
 }));
 
-// Synthetic submission through the demo adapter. Never contacts a real employer.
-router.post('/jobs/:id/apply-demo', ah(async (req, res) => {
-  const job = assembleJobs().find((j) => j.id === req.params.id);
-  if (!job) return res.status(404).json({ error: 'Job not found' });
-  if ((job.scamScore || 0) >= 70) return res.status(403).json({ error: 'Scam screen blocks this action. Resolve the payment or identity indicators first' });
-  const apps = load('applications') || [];
-  if (apps.some((a) => a.jobId === job.id && ['submitted', 'authorized', 'submitting', 'confirmation_pending'].includes(a.state))) {
-    return res.status(409).json({ error: 'An application for this role already exists in the tracker. Duplicates stay blocked' });
-  }
-  const now = new Date().toISOString();
-  const app = {
-    id: id('app'),
-    jobId: job.id,
-    jobSnapshot: { title: job.title, company: job.company?.name, city: job.city, applyUrl: job.applyUrl, score: null },
-    state: 'submitted',
-    mode: 'demo_adapter',
-    receipt: { reference: `DEMO-${Date.now().toString(36).toUpperCase()}`, channel: 'synthetic form adapter', submittedAt: now, note: 'Demonstration submission to a synthetic form. No real employer received anything' },
-    history: [
-      { state: 'discovered', at: job.firstSeen },
-      { state: 'submitted', at: now, note: 'Demo adapter submission with approved packet' }
-    ],
-    createdAt: now,
-    updatedAt: now
-  };
-  apps.push(app);
-  save('applications', apps);
-  res.json({ ok: true, application: app });
-}));
-
-// ---------- companies and sources ----------
+// ---- companies and sources ----
 router.get('/companies', ah(async (req, res) => {
   const companies = load('companies') || [];
   const runs = load('sourceRuns') || [];
@@ -275,21 +257,42 @@ router.get('/companies', ah(async (req, res) => {
   res.json({
     companies: companies.map((c) => {
       const lastRun = [...runs].reverse().find((r) => r.companyId === c.id);
-      return { ...c, lastRun: lastRun || null, jobCount: jobs.filter((j) => j.source?.id === c.handle).length };
+      const sourceJobs = jobs.filter((j) => j.source?.id === c.handle);
+      return {
+        ...c,
+        lastRun: lastRun || null,
+        openJobs: sourceJobs.filter((j) => j.status !== 'closed').length,
+        closedJobs: sourceJobs.filter((j) => j.status === 'closed').length
+      };
     }),
-    providers: ATS_PROVIDERS
+    providers: ATS_PROVIDERS,
+    seedMeta: SEED_META
   });
 }));
 
 router.post('/companies', ah(async (req, res) => {
-  const { name, atsProvider, handle } = req.body || {};
-  if (!name || !atsProvider || !handle) return res.status(400).json({ error: 'Company name, provider, and board identifier are all required' });
+  const body = req.body || {};
+  let atsProvider = body.atsProvider;
+  let handle = body.handle;
+
+  // Paste a careers URL and the provider plus handle are derived automatically.
+  if (!atsProvider && body.url) {
+    const parsed = parseCareersUrl(body.url);
+    if (parsed.unsupported) return res.status(400).json({ error: parsed.unsupported, hint: parsed.handle ? `Provider detected as ${parsed.atsProvider}` : null });
+    atsProvider = parsed.atsProvider;
+    handle = parsed.handle;
+  }
+  if (!body.name || !atsProvider || !handle) return res.status(400).json({ error: 'Company name plus a careers URL, or provider and board identifier, are required' });
   if (!ATS_PROVIDERS[atsProvider] || atsProvider === 'manual') return res.status(400).json({ error: 'Pick greenhouse, lever, or ashby as the provider' });
-  const verification = await verifyBoard(atsProvider, handle);
+
   const companies = load('companies') || [];
+  if (companies.some((c) => c.handle === handle && c.atsProvider === atsProvider)) {
+    return res.status(409).json({ error: 'That board is already in your sources' });
+  }
+  const verification = await verifyBoard(atsProvider, handle);
   const company = {
     id: id('co'),
-    name: String(name).trim(),
+    name: String(body.name).trim(),
     atsProvider,
     handle: String(handle).trim(),
     verified: verification.ok,
@@ -323,18 +326,14 @@ router.delete('/companies/:id', ah(async (req, res) => {
 
 router.get('/sources/health', ah(async (req, res) => {
   const runs = load('sourceRuns') || [];
-  const recent = runs.slice(-50);
+  const recent = runs.slice(-60);
   res.json({
     runs: recent,
-    summary: {
-      total: recent.length,
-      ok: recent.filter((r) => r.ok).length,
-      failing: recent.filter((r) => !r.ok).length
-    }
+    summary: { total: recent.length, ok: recent.filter((r) => r.ok).length, failing: recent.filter((r) => !r.ok).length }
   });
 }));
 
-// ---------- scam ----------
+// ---- scam ----
 router.post('/scam/analyze', ah(async (req, res) => {
   const text = String(req.body?.text || '');
   if (text.trim().length < 20) return res.status(400).json({ error: 'Paste the actual message text so the screen has something to inspect' });
@@ -349,7 +348,7 @@ router.get('/scam/log', ah(async (req, res) => {
   res.json({ log: (load('scamlog') || []).slice(-50).reverse() });
 }));
 
-// ---------- relocation ----------
+// ---- relocation ----
 router.get('/relocation', ah(async (req, res) => {
   const settings = getSettings();
   res.json({
@@ -374,7 +373,7 @@ router.post('/relocation/evaluate', ah(async (req, res) => {
   res.json({ ok: true, result });
 }));
 
-// ---------- tracker ----------
+// ---- tracker ----
 const TRANSITIONS = {
   discovered: ['shortlisted', 'skipped'],
   shortlisted: ['preparing', 'skipped'],
@@ -456,14 +455,13 @@ router.post('/applications/:id/receipt', ah(async (req, res) => {
   res.json({ ok: true, application: app });
 }));
 
-// ---------- settings ----------
+// ---- settings ----
 router.put('/settings', ah(async (req, res) => {
   const settings = getSettings();
   const incoming = req.body || {};
   for (const key of Object.keys(incoming)) {
     if (key === 'llm') {
       settings.llm = { ...settings.llm, ...incoming.llm, providers: { ...(settings.llm?.providers || {}), ...(incoming.llm?.providers || {}) } };
-      // Merge per provider so saving one provider does not wipe others.
       for (const p of Object.keys(incoming.llm?.providers || {})) {
         const merged = { ...(settings.llm.providers[p] || {}), ...incoming.llm.providers[p] };
         if (!merged.apiKey) merged.apiKey = settings.llm.providers[p]?.apiKey || '';
@@ -497,24 +495,105 @@ router.put('/answers/:id', ah(async (req, res) => {
   res.json({ ok: true, answers });
 }));
 
-// ---------- data ----------
+// ---- browser extension bridge (token gated, localhost only) ----
+function extensionAuth(req, res) {
+  const settings = getSettings();
+  const token = req.get('x-jobforge-token') || req.body?.token || req.query?.token;
+  if (!settings.extensionToken || token !== settings.extensionToken) {
+    res.status(403).json({ error: 'Token mismatch. Open JobForge Settings and copy the current extension token' });
+    return false;
+  }
+  return true;
+}
+
+router.options('/extension/*', ah(async (req, res) => {
+  res.setHeader('access-control-allow-origin', '*');
+  res.setHeader('access-control-allow-headers', 'content-type, x-jobforge-token');
+  res.setHeader('access-control-allow-methods', 'GET, POST, OPTIONS');
+  res.json({});
+}));
+
+router.post('/extension/ping', ah(async (req, res) => {
+  res.setHeader('access-control-allow-origin', '*');
+  res.setHeader('access-control-allow-headers', 'content-type, x-jobforge-token');
+  if (!extensionAuth(req, res)) return;
+  res.json({ ok: true, message: 'Connected to JobForge' });
+}));
+
+router.post('/extension/capture', ah(async (req, res) => {
+  res.setHeader('access-control-allow-origin', '*');
+  res.setHeader('access-control-allow-headers', 'content-type, x-jobforge-token');
+  if (!extensionAuth(req, res)) return;
+  const j = req.body?.job || {};
+  if (!j.title || String(j.title).length < 3) return res.status(400).json({ error: 'No job title found on this page' });
+  const text = String(j.description || '');
+  const jobs = load('jobs') || [];
+  const dupe = jobs.find((x) => j.url && x.sourceUrls?.includes(j.url));
+  if (dupe) return res.json({ ok: true, duplicate: true, id: dupe.id, message: 'Already captured earlier' });
+
+  const job = {
+    id: id('ext'),
+    externalId: j.externalId || null,
+    title: String(j.title).slice(0, 140),
+    company: { name: String(j.company || 'Unknown employer').slice(0, 90), verified: false, atsProvider: j.platform || null },
+    city: j.city ? String(j.city).slice(0, 90) : null,
+    workMode: /remote|work from home/i.test(`${j.city || ''} ${text}`) ? 'Remote' : null,
+    employmentType: j.employmentType || 'Full time',
+    description: text || `Captured from ${j.platform || 'the web'} on ${new Date().toLocaleDateString('en-IN')}. ${j.url || ''}`.trim(),
+    requiredSkills: [],
+    preferredSkills: [],
+    experienceRange: parseExperience(text),
+    salary: { known: false, minLPA: null, maxLPA: null },
+    postedAt: j.postedAt || null,
+    firstSeen: new Date().toISOString(),
+    lastSeen: new Date().toISOString(),
+    deadline: j.deadline || null,
+    sourceUrls: j.url ? [j.url] : [],
+    applyUrl: j.applyUrl || j.url || null,
+    source: { type: 'extension', id: `extension:${j.platform || 'web'}` },
+    status: 'open',
+    bond: { status: /bond|service agreement/i.test(text) ? 'candidate_reported' : 'no_evidence', evidence: [] },
+    scamScore: 0,
+    scamFlags: []
+  };
+  const scan = analyzeScam(job.description, { claimedCompany: job.company.name });
+  job.scamScore = scan.score;
+  job.scamFlags = scan.flags;
+  job.scannedAt = job.firstSeen;
+  jobs.push(job);
+  save('jobs', jobs);
+  const profile = getProfile();
+  const match = profile ? scoreJob(job, profile, profile.weights) : null;
+  res.json({ ok: true, id: job.id, match: match ? { score: match.score, lane: match.lane } : null, scan: { severity: scan.severity, flags: scan.flags.length } });
+}));
+
+router.get('/extension/packet', ah(async (req, res) => {
+  res.setHeader('access-control-allow-origin', '*');
+  res.setHeader('access-control-allow-headers', 'content-type, x-jobforge-token');
+  if (!extensionAuth(req, res)) return;
+  const profile = getProfile() || {};
+  const answers = (load('answers') || []).filter((a) => a.approved && a.value);
+  res.json({
+    ok: true,
+    contact: {
+      name: profile.name || '', email: profile.email || '', phone: profile.phone || '',
+      city: profile.city || '', linkedin: profile.linkedin || '', github: profile.github || ''
+    },
+    answers: answers.map((a) => ({ question: a.question, value: a.value }))
+  });
+}));
+
+// ---- data ----
 router.get('/export', ah(async (req, res) => {
   const bundle = {};
   for (const name of ['settings', 'profile', 'jobs', 'applications', 'companies', 'scamlog', 'answers', 'packets', 'sourceRuns']) {
     bundle[name] = load(name);
   }
   bundle.exportedAt = new Date().toISOString();
-  bundle.note = 'Your complete JobForge data. API keys are included only if this file stays private.';
+  bundle.note = 'Your complete JobForge data. The bundle includes your extension token and API keys, so keep the file private.';
   res.setHeader('content-type', 'application/json');
   res.setHeader('content-disposition', `attachment; filename="jobforge-export-${Date.now()}.json"`);
   res.json(bundle);
-}));
-
-router.post('/demo', ah(async (req, res) => {
-  const settings = getSettings();
-  settings.demoMode = !!req.body?.enabled;
-  save('settings', settings);
-  res.json({ ok: true, demoMode: settings.demoMode });
 }));
 
 router.post('/reset', ah(async (req, res) => {
@@ -523,8 +602,10 @@ router.post('/reset', ah(async (req, res) => {
     try { fs.unlinkSync(path.join(DATA_DIR, `${name}.json`)); } catch { /* already gone */ }
   }
   try { fs.rmSync(resumeDir(), { recursive: true, force: true }); } catch { /* already gone */ }
+  scoreCache.clear();
   bootstrap();
   res.json({ ok: true });
 }));
 
 export default router;
+export { warmScores };

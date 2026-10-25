@@ -62,7 +62,7 @@ export default function Tracker() {
 
       {applications.length === 0 && (
         <Empty icon={<KanbanSquare size={24} color="var(--molten)" />} title="The board is clear"
-          sub="Open any job on the Jobs page and start tracking it, or run a demo adapter submission to see the flow." />
+          sub="Open any job on the Jobs page and start tracking it, Shortlist, prepare, submit with the Helper extension, and attach the receipt." />
       )}
 
       <div className="kan">
@@ -81,7 +81,7 @@ export default function Tracker() {
                     <div style={{ fontSize: 11, color: 'var(--faint)', margin: '4px 0 7px' }}>{a.jobSnapshot?.company}</div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Chip tone={STATE_TONE[a.state]}>{a.state.replace(/_/g, ' ')}</Chip>
-                      <span style={{ fontSize: 10, color: 'var(--faint)' }}>{a.mode === 'demo_adapter' ? 'demo' : 'manual'}</span>
+                      <span style={{ fontSize: 10, color: 'var(--faint)' }}>{a.mode === 'extension_assisted' ? 'helper' : 'manual'}</span>
                     </div>
                   </motion.div>
                 ))}

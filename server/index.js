@@ -2,8 +2,9 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import routes from './routes.js';
-import { bootstrap } from './store.js';
+import routes, { warmScores } from './routes.js';
+import { bootstrap, load, save } from './store.js';
+import { fetchAllSources } from './services/refresh.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -12,6 +13,38 @@ bootstrap();
 
 app.use(express.json({ limit: '3mb' }));
 app.use('/api', routes);
+
+// Live refresh scheduler. Polls every enabled board on a fixed cadence so new
+// postings appear and vanished postings get marked closed without you asking.
+const REFRESH = load('settings')?.refresh || { auto: true, intervalMinutes: 20, runOnStart: true };
+let lastRun = 0;
+let running = false;
+
+async function scheduledRefresh(force = false) {
+  if (running) return;
+  const settings = load('settings')?.refresh || REFRESH;
+  if (!settings.auto && !force) return;
+  const intervalMs = Math.max(5, Number(settings.intervalMinutes) || 20) * 60000;
+  if (!force && Date.now() - lastRun < intervalMs) return;
+  const companies = load('companies') || [];
+  if (companies.length === 0) return;
+  running = true;
+  try {
+    console.log(`[jobforge] refreshing ${companies.length} live sources...`);
+    const report = await fetchAllSources();
+    lastRun = Date.now();
+    const ok = report.filter((r) => r.ok).length;
+    warmScores();
+    console.log(`[jobforge] refresh done: ${ok}/${report.length} sources healthy`);
+  } catch (err) {
+    console.error(`[jobforge] refresh failed: ${err.message}`);
+  } finally {
+    running = false;
+  }
+}
+
+setInterval(() => scheduledRefresh(), 60000);
+if (REFRESH.runOnStart) setTimeout(() => scheduledRefresh(), 4000);
 
 // In production the built frontend is served by the same server.
 const dist = path.join(__dirname, '..', 'dist');

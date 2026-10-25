@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { Routes, Route, NavLink, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { AnimatePresence as _AP, motion } from 'framer-motion';
-import { Flame, LayoutDashboard, Compass, FileText, Radio, ShieldAlert, Plane, KanbanSquare, Settings2, Sparkles } from 'lucide-react';
+import { Flame, LayoutDashboard, Compass, FileText, Radio, ShieldAlert, Plane, KanbanSquare, Settings2, Sparkles, PlayCircle } from 'lucide-react';
 import { api } from './api.js';
 import { ToastProvider, Page } from './ui.jsx';
 import Embers from './particles.jsx';
+import Tour from './tour.jsx';
 import Onboarding from './pages/Onboarding.jsx';
 import Today from './pages/Today.jsx';
 import Resume from './pages/Resume.jsx';
@@ -45,6 +46,7 @@ function Splash() {
 
 function Shell({ children }) {
   const { boot } = useApp();
+  const [tourOpen, setTourOpen] = useState(false);
   return (
     <>
       <div className="aurora" />
@@ -73,18 +75,18 @@ function Shell({ children }) {
             ))}
           </nav>
           <div className="sidebar-foot">
+            <button className="btn sm" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setTourOpen(true)}><PlayCircle size={13} /> Guided tour</button>
             <div className={`ai-dot ${boot?.llm?.ready ? 'on' : ''}`}>
               <i /><span>{boot?.llm?.ready ? `AI on · ${boot.llm.model?.split('/').pop()}` : 'AI off · rules mode'}</span>
             </div>
-            {boot?.demoMode && (
-              <NavLink to="/settings" style={{ textDecoration: 'none' }}>
-                <span className="chip violet" style={{ cursor: 'pointer' }}><Sparkles size={11} /> Demo data on</span>
-              </NavLink>
-            )}
+            <div className="ai-dot" style={{ color: 'var(--faint)' }}>
+              <i style={{ background: 'var(--cyan)', boxShadow: '0 0 8px var(--cyan)' }} /><span>{boot?.sourceCount || 0} live sources</span>
+            </div>
           </div>
         </aside>
         <main className="main">{children}</main>
       </div>
+      {tourOpen && <Tour onClose={() => setTourOpen(false)} />}
     </>
   );
 }

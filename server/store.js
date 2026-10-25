@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 import { DEFAULT_WEIGHTS } from './services/scoring.js';
 import { DEFAULT_BUDGETS } from './services/relocation.js';
+import { SEED_COMPANIES } from './seedRegistry.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const DATA_DIR = process.env.JOBFORCE_DATA_DIR || path.join(__dirname, 'data');
@@ -44,10 +45,10 @@ export function id(prefix) {
 
 export const DEFAULT_SETTINGS = {
   llm: { providerId: 'none', providers: {} },
-  demoMode: true,
   autoSubmit: { enabled: false, maxPerDay: 3, allowedSources: [], excludedEmployers: [] },
   relocation: { policy: { minSurplusMonthly: null, minImprovementOverPune: null, maxUpfrontCash: null }, budgets: DEFAULT_BUDGETS, netRate: 0.8, targetMonthlySavings: null },
-  refresh: { autoFetchOnStart: false, minIntervalMinutes: 180 },
+  refresh: { auto: true, intervalMinutes: 20, runOnStart: true },
+  extensionToken: null,
   onboarded: false
 };
 
@@ -73,8 +74,30 @@ export function bootstrap() {
     }
     save('settings', settings);
   }
+  // Issue the extension token once so the browser extension can pair safely.
+  if (!settings.extensionToken) {
+    settings.extensionToken = `jf_${crypto.randomBytes(16).toString('hex')}`;
+    save('settings', settings);
+  }
   if (!load('answers')) save('answers', DEFAULT_ANSWERS);
-  if (!load('companies')) save('companies', []);
+  let companies = load('companies');
+  if (!companies) companies = [];
+  if (companies.length === 0) {
+    companies = SEED_COMPANIES.map((c) => ({
+      id: id('co'),
+      name: c.name,
+      atsProvider: c.atsProvider,
+      handle: c.handle,
+      region: c.region,
+      note: c.note,
+      verified: true,
+      seedVerifiedOn: '2026-10-25',
+      lastStatus: 'Seeded from the verified registry, awaiting first live refresh',
+      addedAt: new Date().toISOString(),
+      lastRefresh: null
+    }));
+    save('companies', companies);
+  }
   if (!load('jobs')) save('jobs', []);
   if (!load('applications')) save('applications', []);
   if (!load('scamlog')) save('scamlog', []);

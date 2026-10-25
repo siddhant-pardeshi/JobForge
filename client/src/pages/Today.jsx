@@ -23,8 +23,12 @@ export default function Today() {
   const hour = new Date().getHours();
   const greeting = hour < 5 ? 'Burning the midnight oil' : hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   const jobs = data?.jobs || [];
-  const live = jobs.filter((j) => j.match && j.match.lane !== 'excluded');
-  const top = live.slice(0, 4);
+  // Surface verified lanes first. Roles awaiting verification stay visible in
+  // their own section further down instead of crowding the hunt deck.
+  const laneRank = { best_pune: 0, remote: 1, relocation: 2, needs_verification: 9 };
+  const live = jobs.filter((j) => j.match && j.match.lane !== 'excluded' && j.status !== 'closed');
+  const ranked = [...live].sort((a, b) => (laneRank[a.match.lane] ?? 5) - (laneRank[b.match.lane] ?? 5) || (b.match.score - a.match.score));
+  const top = ranked.slice(0, 4);
   const deadlines = live
     .filter((j) => j.deadline && daysUntil(j.deadline) !== null && daysUntil(j.deadline) >= 0)
     .sort((a, b) => daysUntil(a.deadline) - daysUntil(b.deadline))
@@ -143,7 +147,7 @@ export default function Today() {
                     ))}
                   </>
                 ) : (
-                  <p style={{ color: 'var(--faint)', fontSize: 12.5 }}>No live sources connected yet. Demo mode is feeding the cockpit{boot?.demoMode ? '' : ' and demo is off, so the deck is empty until you add a source'}.</p>
+                  <p style={{ color: 'var(--faint)', fontSize: 12.5 }}>No live sources connected yet. The verified registry seeds itself on first launch, and the scheduler polls every board for you while the app runs.</p>
                 )}
                 <button className="btn ghost sm" style={{ marginTop: 12 }} onClick={() => navigate('/sources')}><Radio size={13} /> Manage sources</button>
               </div>

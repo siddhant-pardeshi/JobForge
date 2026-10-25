@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Flame, UploadCloud, ArrowRight, ArrowLeft, Check, Sparkles, MapPin, FileText, Zap, Rocket, ShieldAlert, Plane } from 'lucide-react';
+import { Flame, UploadCloud, ArrowRight, ArrowLeft, Check, Sparkles, MapPin, FileText, Zap, Rocket, ShieldAlert, Plane, Radio } from 'lucide-react';
 import { uploadResume, api } from '../api.js';
 import { Field, Chip, ConfidenceChip, Spinner, useToast } from '../ui.jsx';
 import { useNavigate } from 'react-router-dom';
@@ -12,7 +12,7 @@ export default function Onboarding() {
   const [draft, setDraft] = useState(null);
   const [parsing, setParsing] = useState(false);
   const [warn, setWarn] = useState(null);
-  const [prefs, setPrefs] = useState({ targetLocations: 'Pune', workModes: ['onsite', 'hybrid', 'remote'], demoMode: true, city: '' });
+  const [prefs, setPrefs] = useState({ targetLocations: 'Pune', workModes: ['onsite', 'hybrid', 'remote'], city: '' });
   const [llm, setLlm] = useState({ providerId: 'none', apiKey: '', model: '' });
   const [testing, setTesting] = useState(null);
   const fileRef = useRef(null);
@@ -39,7 +39,6 @@ export default function Onboarding() {
   const finish = async () => {
     try {
       await api('/profile', { method: 'PUT', body: { ...draft, city: prefs.city || draft?.city, targetLocations: prefs.targetLocations.split(',').map((s) => s.trim()).filter(Boolean) } });
-      await api('/demo', { method: 'POST', body: { enabled: prefs.demoMode } });
       if (llm.providerId !== 'none') {
         await api('/settings', { method: 'PUT', body: { llm: { providerId: llm.providerId, providers: { [llm.providerId]: { apiKey: llm.apiKey, model: llm.model } } } } });
       }
@@ -223,12 +222,11 @@ function PrefsStep({ prefs, setPrefs }) {
         </div>
       </Field>
       <div className="divider" />
-      <div className="card" style={{ display: 'flex', gap: 14, alignItems: 'center', justifyContent: 'space-between' }}>
-        <div>
-          <strong style={{ fontFamily: 'var(--font-display)' }}>Start with demo data</strong>
-          <p style={{ color: 'var(--muted)', fontSize: 12.5, marginTop: 3 }}>Synthetic Pune employers and jobs to explore every feature instantly. Turn it off when your real sources are connected.</p>
-        </div>
-        <div className={`toggle ${prefs.demoMode ? 'on' : ''}`} onClick={() => setPrefs({ ...prefs, demoMode: !prefs.demoMode })}><i /></div>
+      <div className="card" style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+        <Radio size={16} color="var(--cyan)" />
+        <p style={{ color: 'var(--muted)', fontSize: 12.5 }}>
+          Twenty one genuine employer boards are pre connected and a background scheduler keeps them fresh. Your cockpit will start filling with real openings the moment you land on Today.
+        </p>
       </div>
     </div>
   );

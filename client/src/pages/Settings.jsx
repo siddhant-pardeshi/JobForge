@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Settings2, Zap, KeyRound, Download, Trash2, ShieldAlert, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { Settings2, Zap, KeyRound, Download, Trash2, ShieldAlert, SlidersHorizontal, Sparkles, Puzzle, Copy, RefreshCw } from 'lucide-react';
 import { api } from '../api.js';
 import { useApp } from '../App.jsx';
 import { SectionHead, Chip, Field, Reveal, Spinner, useToast, Toggle, Bar } from '../ui.jsx';
@@ -65,7 +65,9 @@ export default function SettingsPage() {
           <div style={{ display: 'flex', gap: 9, alignItems: 'center', marginBottom: 6 }}><Zap size={17} color="var(--molten)" /><h3>AI provider</h3>
             {boot.llm.ready ? <Chip tone="green">{boot.llm.provider} · {boot.llm.model}</Chip> : <Chip tone="amber">rules mode</Chip>}
           </div>
-          <p style={{ fontSize: 12.5, color: 'var(--muted)', marginBottom: 16 }}>Works with paid keys, free tier keys, or a fully local model. The core app never requires any of this.</p>
+          <p style={{ fontSize: 12.5, color: 'var(--muted)', marginBottom: 16 }}>
+            Works with paid keys, free tier keys, or a fully local model. The core app never requires any of this. Best free start: <strong style={{ color: 'var(--lime)' }}>Groq</strong>. Best drafting quality: <strong style={{ color: 'var(--violet)' }}>Anthropic Claude</strong>. Fastest all round paid option: <strong style={{ color: 'var(--cyan)' }}>OpenAI</strong>.
+          </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: 11 }}>
             {Object.entries(presets).map(([pid, p]) => {
               const active = llm.providerId === pid;
@@ -110,6 +112,29 @@ export default function SettingsPage() {
         </div>
       </Reveal>
 
+      {/* browser extension */}
+      <Reveal>
+        <div className="card" style={{ marginBottom: 18 }}>
+          <div style={{ display: 'flex', gap: 9, alignItems: 'center', marginBottom: 4 }}><Puzzle size={17} color="var(--violet)" /><h3>JobForge Helper extension</h3></div>
+          <p style={{ fontSize: 12.5, color: 'var(--muted)', marginBottom: 14 }}>
+            The helper lives in the <code className="mono">extension/</code> folder of this project. Load it once in Chrome through Manage Extensions and Developer Mode, then pair it with the token below. It captures any posting you are viewing on LinkedIn, Naukri, or a company career page, scores it instantly, and prefills application forms from your approved answers. It never submits anything for you.
+          </p>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+            <code className="mono" style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid var(--border)', borderRadius: 10, padding: '9px 13px', fontSize: 12.5, letterSpacing: '0.03em' }}>{boot.extensionToken || 'token not ready'}</code>
+            <button className="btn sm" onClick={() => { navigator.clipboard.writeText(boot.extensionToken || ''); toast('Extension token copied', 'ok'); }}><Copy size={13} /> Copy token</button>
+            <button className="btn ghost sm" onClick={async () => {
+              try { await refresh(); toast('Token state refreshed', 'ok'); } catch (e) { toast(e.message, 'err'); }
+            }}><RefreshCw size={13} /></button>
+          </div>
+          <ol style={{ margin: '14px 0 0', paddingLeft: 20, fontSize: 12.5, color: 'var(--muted)', display: 'grid', gap: 5 }}>
+            <li>Open <code className="mono">chrome://extensions</code> and enable Developer mode.</li>
+            <li>Click Load unpacked and select the <code className="mono">extension</code> folder inside this project.</li>
+            <li>Click the JobForge Helper icon, open its options, and paste the token.</li>
+            <li>Browse any job posting and press the Send to JobForge button on the page.</li>
+          </ol>
+        </div>
+      </Reveal>
+
       {/* weights */}
       {weights && (
         <Reveal>
@@ -139,7 +164,7 @@ export default function SettingsPage() {
           <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.35)', borderRadius: 12, padding: '10px 14px', marginBottom: 14 }}>
             <ShieldAlert size={15} color="var(--amber)" style={{ flexShrink: 0, marginTop: 2 }} />
             <p style={{ fontSize: 12, color: 'var(--muted)' }}>
-              Auto submit is off by default and currently only the synthetic demo adapter can ever submit on your behalf. Real employer submissions require a tested, permitted route, and anything on LinkedIn or Naukri stays manual by policy. Pause all activity from the tracker at any time.
+              Auto submit stays off by default and no platform currently allows unattended submission without risking your account. JobForge gets you to the finish line instead: instant alerts on new roles, a prepared packet, and the Helper extension prefilling forms on the employer's own page. Your final click is what submits, everywhere, always.
             </p>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>

@@ -14,9 +14,32 @@ export const DEFAULT_WEIGHTS = {
   freshness: 5
 };
 
-const PUNE_TOKENS = ['pune', 'hinjewadi', 'hinjawadi', 'kharadi', 'magarpatta', 'hadapsar', 'kothrud', 'baner', 'wakad', 'viman nagar', 'aundh', 'chakan', 'talawade'];
-const REMOTE_TOKENS = ['remote', 'work from home', 'wfh', 'anywhere in india'];
-const BIG_CITY_TOKENS = { bengaluru: 'Bengaluru', bangalore: 'Bengaluru', mumbai: 'Mumbai', 'navi mumbai': 'Mumbai', hyderabad: 'Hyderabad', chennai: 'Chennai', delhi: 'Delhi NCR', noida: 'Delhi NCR', gurgaon: 'Delhi NCR', gurugram: 'Delhi NCR' };
+const INDIA_CITIES = ['pune', 'hinjewadi', 'hinjawadi', 'kharadi', 'magarpatta', 'hadapsar', 'kothrud', 'baner', 'wakad', 'bengaluru', 'bangalore', 'mumbai', 'navi mumbai', 'thane', 'hyderabad', 'chennai', 'gurugram', 'gurgaon', 'noida', 'new delhi', 'delhi', 'kolkata', 'ahmedabad', 'jaipur', 'indore', 'nagpur', 'coimbatore', 'chandigarh', 'mohali', 'kochi', 'trivandrum', 'mysore', 'vadodara', 'surat', 'bhubaneswar', 'lucknow', 'noida'];
+const REMOTE_TOKENS = ['remote', 'work from home', 'wfh', 'distributed', 'anywhere'];
+const OTHER_REGION_TOKENS = ['united states', 'usa', 'san francisco', 'new york', 'seattle', 'austin', 'boston', 'chicago', 'denver', 'los angeles', 'mountain view', 'santa clara', 'bellevue', 'washington', 'california', 'texas', 'singapore', 'london', 'dublin', 'ireland', 'tokyo', 'japan', 'canada', 'toronto', 'vancouver', 'ontario', 'amsterdam', 'berlin', 'munich', 'paris', 'sydney', 'australia', 'israel', 'tel aviv', 'dubai', 'united arab', 'emea', 'apac', 'latam', 'europe', 'poland', 'spain', 'portugal', 'mexico', 'brazil', 'united kingdom', 'denmark', 'copenhagen', 'aarhus', 'sweden', 'stockholm', 'norway', 'oslo', 'finland', 'helsinki', 'netherlands', 'belgium', 'brussels', 'switzerland', 'zurich', 'austria', 'vienna', 'romania', 'bucharest', 'czech', 'prague', 'hungary', 'budapest', 'warsaw', 'krakow', 'greece', 'italy', 'milan', 'rome', 'turkey', 'istanbul', 'south africa', 'kenya', 'nigeria', 'argentina', 'chile', 'colombia', 'korea', 'seoul', 'china', 'beijing', 'shanghai', 'taiwan', 'hong kong', 'vietnam', 'thailand', 'philippines', 'malaysia', 'indonesia', 'new zealand', 'saudi', 'riyadh', 'qatar', 'doha', 'estonia', 'tallinn', 'lithuania', 'latvia', 'slovakia', 'slovenia', 'croatia'];
+
+function locationOf(job) {
+  // Short country codes are checked against the location field only, since
+  // "us" and "uk" appear inside ordinary sentence text far too easily.
+  const cityWork = `${job.city || ''} ${job.workMode || ''}`.toLowerCase();
+  const hay = `${cityWork} ${String(job.description || '').slice(0, 200)}`.toLowerCase();
+  const shortCodeHit = /\b(us|uk)\b/.test(cityWork);
+  if (/\bpune\b/i.test(hay)) return { place: 'Pune', lane: 'pune' };
+  if (REMOTE_TOKENS.some((t) => cityWork.includes(t))) {
+    // A remote label only helps if the region includes India or is global.
+    const restricted = (OTHER_REGION_TOKENS.some((t) => cityWork.includes(t)) || shortCodeHit) && !/\bindia\b/i.test(cityWork);
+    if (restricted) return { place: 'Remote, restricted region', lane: 'outside_india' };
+    if (/\bindia\b/i.test(hay) || INDIA_CITIES.some((t) => hay.includes(t))) return { place: 'Remote, India eligible', lane: 'remote' };
+    return { place: 'Remote', lane: 'remote' };
+  }
+  if (/\bindia\b/i.test(hay) || INDIA_CITIES.some((t) => hay.includes(t))) {
+    return { place: 'India', lane: 'india' };
+  }
+  if (OTHER_REGION_TOKENS.some((t) => cityWork.includes(t)) || shortCodeHit) {
+    return { place: 'Outside India', lane: 'outside_india' };
+  }
+  return { place: null, lane: 'unknown' };
+}
 
 function hitCount(text, signals) {
   let titleScore = 0;
@@ -83,15 +106,6 @@ function totalYearsOfProfile(profile) {
     return (end - start) / (365.25 * 24 * 3600 * 1000);
   });
   return Math.round(spans.reduce((a, b) => a + b, 0) * 10) / 10;
-}
-
-function locationOf(job) {
-  const hay = `${job.city || ''} ${job.workMode || ''} ${job.description?.slice(0, 400) || ''}`.toLowerCase();
-  if (PUNE_TOKENS.some((t) => hay.includes(t))) return 'Pune';
-  const remoteHit = REMOTE_TOKENS.some((t) => `${job.city || ''} ${job.workMode || ''}`.toLowerCase().includes(t));
-  if (remoteHit) return 'Remote';
-  for (const [token, label] of Object.entries(BIG_CITY_TOKENS)) if (hay.includes(token)) return label;
-  return null;
 }
 
 export function scoreJob(job, profile, weights) {
@@ -164,24 +178,27 @@ export function scoreJob(job, profile, weights) {
   components.push({ id: 'experienceFit', label: 'Experience fit', weight: w.experienceFit, earned: Math.round(expEarned * 10) / 10 });
 
   // Component: location and work mode fit
-  const loc = locationOf(job);
+  const geo = locationOf(job);
   let locEarned = w.locationFit * 0.45;
   let laneLocation = 'unknown';
-  if (loc === 'Pune') {
+  if (geo.lane === 'pune') {
     locEarned = w.locationFit;
     laneLocation = 'pune';
     reasons.push({ kind: 'location', text: 'Based in Pune, your primary location' });
-  } else if (loc === 'Remote') {
+  } else if (geo.lane === 'remote') {
     locEarned = w.locationFit * 0.87;
     laneLocation = 'remote';
     reasons.push({ kind: 'location', text: 'Remote role, workable from Pune if India eligibility holds' });
     notes.push('Remote labels can hide country or timezone limits, verify before applying');
-  } else if (loc && BIG_CITY_TOKENS[loc.toLowerCase()]) {
+  } else if (geo.lane === 'india') {
     locEarned = w.locationFit * 0.4;
     laneLocation = 'relocation';
-    reasons.push({ kind: 'location', text: `${loc} based, worth it only if the offer clears your relocation policy` });
+    reasons.push({ kind: 'location', text: `${geo.place} based, worth it only if the offer clears your relocation policy` });
+  } else if (geo.lane === 'outside_india') {
+    locEarned = 0;
+    reasons.push({ kind: 'location', text: `Located outside India (${geo.place}), so it cannot be worked from Pune` });
   } else {
-    notes.push('Location is not stated clearly');
+    notes.push('Location is not stated clearly, it stays in review until verified');
   }
   components.push({ id: 'locationFit', label: 'Location fit', weight: w.locationFit, earned: Math.round(locEarned * 10) / 10 });
 
@@ -207,7 +224,7 @@ export function scoreJob(job, profile, weights) {
   // Component: employer evidence
   const src = job.source?.type || 'unknown';
   const verified = job.company?.verified;
-  const evidenceBase = verified ? 1 : src === 'greenhouse' || src === 'lever' || src === 'ashby' ? 0.9 : src === 'demo' ? 0.8 : src === 'imported' ? 0.6 : 0.4;
+  const evidenceBase = verified ? 1 : src === 'greenhouse' || src === 'lever' || src === 'ashby' ? 0.9 : src === 'extension' ? 0.7 : src === 'imported' ? 0.6 : 0.4;
   const scamPenalty = (job.scamScore || 0) >= 40 ? 0.5 : 0;
   components.push({ id: 'employerEvidence', label: 'Employer evidence', weight: w.employerEvidence, earned: Math.round(w.employerEvidence * evidenceBase * (1 - scamPenalty) * 10) / 10 });
 
@@ -231,6 +248,7 @@ export function scoreJob(job, profile, weights) {
   if (classification.status === 'excluded') gates.push('nontechnical');
   if ((job.scamScore || 0) >= 70) gates.push('scamRisk');
   if (job.status === 'closed') gates.push('closed');
+  if (geo.lane === 'outside_india') gates.push('outside_india');
 
   let lane = 'needs_verification';
   if (gates.length) lane = 'excluded';
@@ -251,9 +269,9 @@ export function scoreJob(job, profile, weights) {
     lane,
     stretch,
     classification,
-    location: loc,
+    location: geo.place,
     coverage: {
-      knownFields: ['title', 'company', 'description'].filter((f) => job[f]).length + (sal.known ? 1 : 0) + (job.postedAt ? 1 : 0) + (loc ? 1 : 0),
+      knownFields: ['title', 'company', 'description'].filter((f) => job[f]).length + (sal.known ? 1 : 0) + (job.postedAt ? 1 : 0) + (geo.place ? 1 : 0),
       totalFields: 6
     }
   };

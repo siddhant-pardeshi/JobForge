@@ -1,129 +1,133 @@
 # JobForge
 
-**An AI powered job hunt cockpit for tech job seekers in India.**
+**An AI powered job hunt cockpit for tech job seekers in India. Real companies, real openings, zero fake data.**
 
-JobForge reads your resume, hunts verified tech openings from live employer job boards, scores every one with explainable matching, screens recruitment scams before they reach you, prices relocation offers honestly, and tracks every application from shortlist to offer.
+JobForge reads your resume, pulls genuine openings live from verified employer career boards, scores every one with explainable matching, screens recruitment scams before they reach you, prices relocation offers honestly, and tracks every application from shortlist to offer. A companion browser extension captures postings from LinkedIn, Naukri, and any company careers page with one click, and prefills application forms from your approved answers.
 
-Built for a single job seeker first. Runs fully on your own Windows machine. Your resume, your API keys, and your data never leave your storage unless you point an AI provider at them yourself.
+Everything runs on your own machine. Your resume, your keys, and your data stay yours.
 
-* Built and tuned for Siddhant Pardeshi, Java and Spring Boot developer in Pune. Fork it, drop in your own resume, and it retargets to you.
+* Built and tuned for Siddhant Pardeshi, Java and Spring Boot developer in Pune. Fork it, upload your own resume, and it retargets to you.
 
-## Why it exists
+## Real data, no shortcuts
 
-Most job hunt tools stop at a keyword search. JobForge was designed around the realities of hunting a tech job from Pune in 2026:
+There is no demo mode and no synthetic dataset anywhere in this project. Every posting you see comes from a live employer board. On first launch, JobForge seeds itself with twenty one companies whose career boards were each verified against their public listing endpoints on 25 October 2026, chosen for genuine India hiring depth:
 
-* Job boards bury relevant engineering roles under sales and BDA listings at the same software companies. JobForge classifies the actual work described, not the company name, and keeps a visible audit of everything it filtered out.
-* Recruiters and WhatsApp forwards demand registration fees, "refundable deposits", and OTPs. JobForge screens any pasted message against 18 fraud indicators and blocks automatic action whenever payment or identity risks appear.
-* Total CTC numbers hide the truth about relocation. JobForge separates fixed from variable pay, deposits from recurring rent, and joining bonuses from monthly cash, then tells you whether an offer actually clears your affordability policy.
-* Applications vanish into a void. JobForge keeps an honest state machine where "submitted" only counts when a receipt backs it.
+Zscaler (real Pune engineering center), Databricks, Meesho, Rubrik (Pune presence), Okta, Pure Storage, Cloudflare, Elastic, Stripe, GitLab, Figma, MongoDB, Coursera, Yugabyte, Spotify, OpenAI, Cursor, Supabase, PostHog, Linear, and Perplexity.
+
+The first refresh pulls several thousand live postings. The engine classifies each one by the work it actually describes, so a sales role at a software company never masquerades as an engineering job, and postings outside India are honestly excluded instead of silently cluttering your feed. Sources with a quiet board show their emptiness honestly rather than pretending.
+
+## How the real time updates work
+
+This question deserves a straight answer, so here is the whole mechanism with nothing hidden.
+
+* **A background scheduler polls every connected board on a fixed cadence, every 20 minutes by default.** You can change the interval or pause it on the Sources page. Each poll fetches the full live listing set from each board through its official public endpoint.
+* **New postings appear in your cockpit automatically.** Nothing to press.
+* **Closed and redacted roles are detected honestly.** A posting that vanishes from its official board gets one grace miss, because boards sometimes drop a listing for an hour. After two consecutive misses it is marked closed with a timestamp, and a dedicated Closed or redacted lane keeps it visible with an explanation. If the employer reposts it, the role reopens on its own and its miss counter resets.
+* **The browser extension gives you second by second coverage of LinkedIn and Naukri.** The moment you open a posting on either platform, one click captures it into your cockpit, scored and scam screened within a second. This covers exactly the gap that polling cannot, because those two platforms do not offer public listing endpoints and their terms prohibit automated scraping. The app itself never touches LinkedIn or Naukri servers.
+* **While your machine sleeps, the clock pauses.** The scheduler is part of the local server, so updates flow while it runs. An always on deployment of the same Express backend makes it continuous, and nothing in the design blocks that step.
+
+## What about auto apply? The honest answer
+
+JobForge deliberately does not bot LinkedIn or Naukri. Both platforms prohibit automated activity in their terms, and the realistic outcome of a bot is your own account restricted, which costs you far more than the clicks it saves. Instead JobForge compresses the legitimate path to its minimum:
+
+1. A new relevant role appears (board refresh or extension capture) and lands in your cockpit already scored.
+2. The Helper extension prefills the application form on the employer's own page from your approved answers, including your name, contact, notice period, and anything else you have approved.
+3. You review the prefilled form and press the final submit button yourself, everywhere, always.
+
+That is the fastest safe pipeline that exists, and it is fully automatic right up to the one click that must stay yours.
+
+## Which API key is best
+
+JobForge works completely without any key, and the rules engine handles matching, scoring, screening, tracking, and packets on its own. A key only upgrades the writing quality of cover letters and bullet suggestions. Tested recommendation order for this project:
+
+* **Best free tier: Groq.** A free console key, extremely fast open models, and a generous rate limit. Recommended if you want AI drafting at zero cost. Model suggestion: llama 3.3 70b versatile.
+* **Best writing quality: Anthropic Claude.** Cover letters that sound human. Claude Haiku is cheap and excellent, Claude Sonnet if you want the finest output. Recommended if you want the best possible letters and do not mind paying per use.
+* **Best all round paid: OpenAI.** gpt-4o-mini is inexpensive and reliable for this workload.
+* **Fully private: Ollama.** Runs on your own machine, zero cost, your resume never leaves it. Slower and blunter writing.
+* **One key, many models: OpenRouter.** Handy if you want to experiment, with several free daily models.
+* **Z.ai GLM** also works through its OpenAI compatible endpoint.
+
+Configure in Settings with a live Test button. Keys are stored in a local file that git never sees, and they travel only to the provider you chose.
 
 ## Feature tour
 
 ### Resume intelligence
-Upload a PDF, DOCX, or pasted text and get an editable structured profile with per fact confidence chips. Skills are matched through a synonym aware taxonomy of 70 plus technologies, so Java 17, SpringBoot, and Spring Data JPA all land correctly even when PDF extraction mangles the spacing. Scanned PDFs are detected and reported honestly instead of guessed at.
+Upload a PDF, DOCX, or pasted text and get an editable structured profile with per fact confidence chips. The parser is tuned for Indian tech resumes, including PDFs whose fonts drop space glyphs: camel case reconstruction and a seventy technology synonym taxonomy mean Java 17, SpringBoot, and REST APIs all land correctly. Scanned PDFs are detected and reported honestly.
 
 ### Explainable matching
-Every job gets a score out of 100 built from seven transparent components: demonstrated skill fit, responsibility fit, experience fit, location fit, compensation fit, employer evidence, and freshness. Weights are yours to retune in Settings with live sliders. Every card shows the reasons for, the gaps against, and the unknowns, linked to your actual resume facts. Nontechnical roles are excluded, ambiguous ones go to a review lane, and nothing is silently hidden.
+Every job carries a score out of 100 built from seven transparent components with weights you can retune live. Every card shows the reasons for, the gaps against, and the unknowns. Lanes: Best in Pune, Remote from Pune, Relocation, Needs verification, Filtered out, and Closed or redacted. Nothing is silently hidden, including what the engine rejected and why.
 
-### Live discovery from real employer boards
-Connect any employer whose careers page runs on Greenhouse, Lever, or Ashby. JobForge verifies the board live before saving it, normalizes every posting into one schema, deduplicates across sources while preserving provenance, and shows a coverage dashboard that distinguishes "zero matching jobs" from "this source could not be checked". LinkedIn and Naukri stay deliberately manual: their terms prohibit automation, so JobForge gives you Boolean search strings and a manual handoff instead of a scraper that could cost you your account.
+### Genuine discovery with coverage you can audit
+Add any Greenhouse, Lever, or Ashby company by pasting its careers URL: the provider and board handle are detected automatically and the board is probed live before saving. A coverage dashboard distinguishes zero matching jobs from a source that could not be checked, and every refresh run is logged with what changed.
 
 ### Scam and impersonation screening
-Paste any suspicious email, WhatsApp text, or job ad. Eighteen weighted indicators cover fee demands, UPI and OTP requests, guaranteed placement promises, shortened links, offer without interview patterns, and more. You get a risk score, a severity band, specific advice per indicator, and a private log. A WhatsApp contact alone is never declared fraudulent, and a payment demand always blocks automation, no matter how good the skill match is.
+Paste any suspicious message: eighteen weighted indicators, a risk band, per indicator advice, and a private log. Payment demands block automated action regardless of how good the role looks. A WhatsApp contact alone is never declared fraudulent.
 
 ### Relocation economics
-Evaluate any offer against editable city budgets. Three scenarios (cautious, base, favorable) compute monthly surplus, savings margin, and the gap over staying in Pune. Deposits and moving costs are tracked as liquidity needs, never laundered into monthly expenses. Undisclosed pay produces "relocation affordability unknown" plus the exact questions to ask the recruiter, never a fake verdict.
+Cautious, base, and favorable scenarios compute monthly surplus, savings margin, and the gap over staying in Pune. Deposits and moving costs are liquidity, never laundered into monthly expenses. Undisclosed pay produces affordability unknown plus the exact questions to ask the recruiter.
 
-### Application packets, tracked honestly
-Forge a packet per role: emphasis suggestions, a grounded cover letter draft, unanswered questions, and gaps stated plainly. Tailoring reorders and rewords what your resume already proves; inventing a metric or employer is a hard rule the AI prompts enforce. The tracker moves applications through a real state machine, treats a click as never enough, keeps submissions pending confirmation until a receipt exists, and blocks duplicate applications.
+### Honest tracking
+Applications move through a real state machine. Submissions count only with receipt evidence, duplicates are blocked, and pause semantics are real.
 
-### Demo mode
-A synthetic Pune employer set ships with the app: perfect matches, remote roles, a relocation lure, a senior stretch role, a sales listing that must be excluded, an ambiguous support listing, a bonded role, and a fee demanding scam. Every feature is explorable in ninety seconds with zero configuration.
-
-## AI providers
-
-JobForge works fully without any AI key. When you add one, tailoring and cover letters get sharper, and everything degrades gracefully if the provider fails. Keys are stored in a local file that git never sees.
-
-* **OpenAI** (paid, GPT models)
-* **Anthropic Claude** (paid, best writing quality)
-* **Groq** (free tier, very fast open models)
-* **OpenRouter** (one key, hundreds of models, several free daily options)
-* **Ollama** (fully local and offline, your resume never leaves the machine)
-* **Z.ai GLM** (GLM models through the Z.ai open platform)
-* **Custom** (any OpenAI compatible endpoint)
-
-Configure in Settings, hit Test, and the status dot in the sidebar turns green.
+### Guided tour with voice
+Press Guided tour in the sidebar. A ten step walkthrough navigates the real product and narrates aloud through your browser's built in speech engine, preferring a soft female voice such as Microsoft Zira or Aria. A speaker icon mutes it. A full narration script for recording your own video lives in docs/WALKTHROUGH.md.
 
 ## Quick start (Windows)
 
-Prerequisites: [Node.js 20.19 or newer](https://nodejs.org). Everything else is bundled.
+Prerequisites: Node.js 20.19 or newer.
 
 ```bash
-# inside this folder
 npm install
 
 # run it: backend on 8787, animated UI on 5173
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173), drop in your resume, and walk the onboarding. That is the whole setup.
+Open http://localhost:5173 and either walk the onboarding or, if you are Siddhant, land straight in a cockpit that already knows your resume. Prefer one process? `npm run build` then `npm start` serves everything from port 8787. Run `npm test` any time for the 21 test verification suite.
 
-Prefer a single process? Build once and let the server serve the finished interface:
+### Pair the browser extension (two minutes)
 
-```bash
-npm run build
-npm start
-# open http://localhost:8787
-```
+1. Copy the extension token from the Settings page.
+2. Open chrome://extensions, enable Developer mode, click Load unpacked, and select the `extension` folder inside this project.
+3. Click the JobForge Helper icon, paste the token, press Pair, then Test connection.
+4. Open any posting on LinkedIn, Naukri, Greenhouse, Lever, Ashby, SmartRecruiters, Workday, or any page with structured job data, and press Send to JobForge on the page. The posting lands in your cockpit scored. On application forms, press Autofill with JobForge and review before you submit.
 
-Run the verification suite any time:
+## Using it without a key
 
-```bash
-npm test
-```
+Everything except AI word polish works from the first minute: resume parsing, live board discovery, scheduled refresh, closed detection, scam screening, explainable scoring, relocation math, tracker, extension capture, and rules drafted packets. The sidebar shows AI off, rules mode so you always know.
 
-## Configuration
+## Using it with a key
 
-No `.env` is required. Optional overrides live in `.env.example`. Port defaults to 8787. All other state (profile, keys, tracked jobs, scam log) lives in `server/data/` which is git ignored on purpose. Export everything from Settings at any time.
+Add the key in Settings, press Test, and the sidebar dot turns green with the model name. From then on, forged packets include an AI drafted summary, bullets, and a cover letter grounded strictly in your resume text, plus a questions list for anything the resume cannot honestly support. Every AI output is labeled as such, and a provider failure falls back to the rules draft with a notice.
 
 ## Project structure
 
 ```
-server/            Express API: parsing, scoring, adapters, screening, tracking
-  services/        scoring, scam, ats, parser, llm, relocation, tailoring
-  taxonomy.js      skill synonyms, role families, nontech filters
-  demo.js          synthetic Pune fixture set
+server/            Express API: parsing, scoring, adapters, refresh, screening, tracking
+  services/        scoring, scam, ats, parser, llm, relocation, tailoring, refresh
+  seedRegistry.js  the 21 pre verified genuine boards and URL auto detection
 client/            React 19 + Vite + Tailwind 4 + Framer Motion interface
-test/              16 acceptance tests covering the hard guarantees
-docs/              capability matrix and architecture notes
+extension/         Chrome MV3 helper: capture and autofill, never auto submit
+test/              21 acceptance tests covering the hard guarantees
+docs/              capability matrix, walkthrough script
 ```
 
-## How scoring works
+## Scoring weights
 
-| Component | Points |
-| --- | --- |
-| Demonstrated skill fit | 30 |
-| Responsibility and project fit | 20 |
-| Experience and seniority fit | 15 |
-| Location and work mode fit | 15 |
-| Compensation fit | 10 |
-| Employer evidence | 5 |
-| Freshness and deadline | 5 |
-
-These are starting values, not hiring probabilities. Unknowns land on neutral middle scores with a visible note, so an unlisted salary never buries a great Pune role but also never triggers a confident relocation recommendation.
+Demonstrated skill fit 30, responsibility fit 20, experience fit 15, location fit 15, compensation fit 10, employer evidence 5, freshness 5. Unknowns land on neutral middle scores with a visible note: an unlisted salary never buries a great Pune role, and it never triggers a confident relocation recommendation either.
 
 ## Honest limitations
 
-* Greenhouse, Lever, and Ashby listing access is read only. Applying always happens on the employer's own hosted form or by manual handoff. No tool can submit on your behalf there without employer credentials, and JobForge will never ask for those.
-* LinkedIn and Naukri are manual by policy, not by omission. Scraping them risks your account, so the app invests in Boolean strings, paste import, and handoff instead.
-* Relocation math uses an editable indicative net rate rather than claiming authority over tax rules. Enter a real offer's take home figure for exact numbers.
-* Scanned PDFs report honestly that OCR is not built in yet; paste the text and everything works.
-* The app runs while your machine runs. A scheduled background refresh needs an always on deployment, which the clean Express backend makes straightforward later.
+* Listing access is read only. Submission always happens on the employer's own page with your click. No public API allows a job seeker to submit on their behalf without employer credentials, and JobForge will never ask for those.
+* LinkedIn and Naukri coverage comes through the extension when you browse, not through scraping. That is a policy choice to protect your accounts.
+* Boards go quiet when companies pause hiring. The dashboard says so plainly.
+* Relocation math uses an editable indicative net rate rather than claiming tax authority.
+* The refresh scheduler runs while your machine does.
 
 ## Verification
 
-16 acceptance tests run on every `npm test`, covering the guarantees that matter: sales at a software company is excluded, a genuine engineering role at a bank matches, ambiguous titles go to review, synonyms match without fabricating experience, a Pune role outranks an equivalent relocation role, undisclosed pay keeps roles viable but flags affordability as unknown, overlapping employment is never double counted, payment demands block even perfect matches, a WhatsApp contact alone is not fraud, cross source duplicates merge with provenance, deposits never leak into recurring costs, and resume extraction finds the essentials.
+21 tests run on every npm test: classification edges (sales at a software company excluded, engineering at a bank matched, ambiguous titles routed to review), synonym matching without fabrication, Pune outranking equal relocation roles, unknown pay handling, scam blocking, duplicate protection, cross source merge with provenance, deposit separation, and the new refresh engine: one missed check never closes a role, two do, reposts reopen automatically, and new postings never duplicate. The seeded registry itself is test asserted to be structurally genuine.
 
 ## License
 
-MIT. See [LICENSE](LICENSE) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+MIT. See LICENSE and THIRD_PARTY_NOTICES.md.
