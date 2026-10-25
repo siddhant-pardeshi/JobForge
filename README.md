@@ -118,12 +118,21 @@ The helper remembers every value it fills. Your saved autofill data is editable 
 
 The cockpit is a personal tool, but sharing it is one command away thanks to public mode:
 
-1. `npm run build` then `npm start`, and flip public mode on by setting `"publicMode": true` inside `server/data/settings.json` (or start with `JOBFORGE_PUBLIC=1`). The server prints a six digit access code in the terminal.
+1. `npm run build` then `npm start`, and flip public mode on by setting `"publicMode": true` inside `server/data/settings.json` (or start with `JOBFORGE_PUBLIC=1`). The server prints a six digit access code and an admin code in the terminal.
 2. Expose it with any HTTPS tunnel, for example cloudflared: `cloudflared tunnel --url http://localhost:8787`.
 3. Share the resulting URL. Visitors meet a lock screen and must enter the access code; a correct entry unlocks that browser for thirty days.
 4. You on the host machine never see the lock screen, and the browser helper authenticates through its own pairing token.
 
-The gate is deliberately simple and honest: the access code is the only secret, the cookie is HttpOnly and Secure on HTTPS, and every endpoint including exports sits behind it. If you need to revoke access, change the code in settings and restart. For a permanently deployed instance, run the same server on any small VPS behind a reverse proxy with HTTPS.
+### The access switch
+
+Open Settings, Access, and you hold the master switch as the admin:
+
+* **Open to everyone**: anyone with the link uses the cockpit immediately, completely free, no code needed. Ideal for letting friends try it or for a public demo.
+* **Private with access code**: visitors must enter the six digit code once per browser.
+
+The switch flips instantly and works from the host machine with a single click. From any other browser, paste the admin code shown in the terminal once, and that browser becomes a remote control for the switch. Only the owner can flip it: ordinary visitors, even during open access, get a 403 if they try. The access code, admin code, and helper pairing token are never sent to guests, and the gate covers every endpoint including data export. Flipping back to private instantly locks out every browser that has not unlocked with the code or is not the owner.
+
+For a permanently deployed instance, run the same server on any small VPS behind a reverse proxy with HTTPS.
 
 ## Running it without a key
 

@@ -11,6 +11,7 @@ import { fetchFromProvider, verifyBoard, ATS_PROVIDERS } from './services/ats.js
 import { PRESETS, llmStatus, testProvider } from './services/llm.js';
 import { buildPacket, booleanStrings } from './services/tailoring.js';
 import { evaluateOffer, DEFAULT_BUDGETS, BUDGET_CATEGORIES } from './services/relocation.js';
+import { isAdminReq } from './services/access.js';
 import { fetchAllSources, runSource } from './services/refresh.js';
 import { SEED_COMPANIES, SEED_META, parseCareersUrl } from './seedRegistry.js';
 
@@ -37,6 +38,10 @@ function maskSettings(settings) {
     providers[key].apiKeyMask = keyStr ? `•••• ${keyStr.slice(-4)}` : '';
     providers[key].apiKey = '';
   }
+  // Secrets never travel to ordinary visitors, even in open access mode.
+  delete clone.accessCode;
+  delete clone.adminCode;
+  delete clone.extensionToken;
   return clone;
 }
 
@@ -107,6 +112,8 @@ function warmScores() {
 router.get('/bootstrap', ah(async (req, res) => {
   const settings = getSettings();
   const companies = load('companies') || [];
+  // The pairing token is only shown to the owner; guests never see it.
+  const admin = isAdminReq(settings, req);
   res.json({
     profile: getProfile(),
     settings: maskSettings(settings),
@@ -116,7 +123,8 @@ router.get('/bootstrap', ah(async (req, res) => {
     atsProviders: ATS_PROVIDERS,
     storageDir: DATA_DIR,
     refresh: settings.refresh || DEFAULT_SETTINGS.refresh,
-    extensionToken: settings.extensionToken || '',
+    extensionToken: admin ? (settings.extensionToken || '') : '',
+    access: { publicMode: settings.publicMode === true, openAccess: settings.openAccess === true, youAreAdmin: admin },
     seedMeta: SEED_META,
     sourceCount: companies.length
   });

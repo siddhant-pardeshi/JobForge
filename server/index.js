@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import routes, { warmScores } from './routes.js';
 import { bootstrap, load, save } from './store.js';
 import { fetchAllSources } from './services/refresh.js';
+import { gateAllowed, gateHash, isAdminReq } from './services/access.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -17,43 +18,26 @@ app.use(compression());
 app.use(express.json({ limit: '3mb' }));
 
 // ---------- public access gate ----------
-// When the cockpit is exposed beyond this machine (JOBFORCE_PUBLIC=1), every
-// API call must prove the visitor knows the access code. The owner working on
-// this machine is exempt, and the helper passes through its pairing token.
+// When the cockpit is exposed beyond this machine, every API call passes the
+// gate. Private mode requires the access code from tunnel visitors, open
+// access mode lets everyone in. The owner on this machine is always exempt,
+// and the helper passes through its pairing token.
 function gateActive() {
-  return process.env.JOBFORCE_PUBLIC === '1' || load('settings')?.publicMode === true;
-}
-
-function gateHash(code) {
-  return crypto.createHmac('sha256', String(code)).update('jobforge-gate-v1').digest('hex');
-}
-
-function gateAllowed(req) {
   const settings = load('settings') || {};
-  // Any tunnel or proxy header means the request arrived from outside this
-  // machine, even though the tunnel client itself connects from loopback.
-  const proxied = !!(req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.headers['x-forwarded-proto'] || req.headers['x-real-ip']);
-  if (proxied) {
-    if (req.headers['x-jobforge-token'] && req.headers['x-jobforge-token'] === settings.extensionToken) return true;
-    const cookies = String(req.headers.cookie || '');
-    return cookies.includes(`jf_gate=${gateHash(settings.accessCode)}`);
-  }
-  const loopback = /^(::1|::ffff:127\.0\.0\.1|127\.0\.0\.1)$/.test(req.socket.remoteAddress || '');
-  if (loopback) return true;
-  const cookies = String(req.headers.cookie || '');
-  return cookies.includes(`jf_gate=${gateHash(settings.accessCode)}`);
+  return settings.publicMode === true;
 }
 
 app.use((req, res, next) => {
   if (!gateActive()) return next();
-  if (req.path === '/api/unlock') return next();
+  if (req.path === '/api/unlock' || req.path === '/api/access') return next();
   if (!req.path.startsWith('/api')) return next(); // the app shell loads so the lock screen can render
-  if (gateAllowed(req)) return next();
+  if (gateAllowed(load('settings') || {}, req)) return next();
   res.status(401).json({ error: 'This cockpit is private. Enter your access code to continue.', locked: true });
 });
 
 app.post('/api/unlock', (req, res) => {
   const settings = load('settings') || {};
+  if (settings.openAccess) return res.json({ ok: true, message: 'Open access is on, no code needed' });
   const code = String(req.body?.code || '').trim();
   if (!settings.accessCode || code !== settings.accessCode) {
     return res.status(403).json({ error: 'That access code is not correct' });
@@ -61,6 +45,43 @@ app.post('/api/unlock', (req, res) => {
   const secure = req.headers['x-forwarded-proto'] === 'https' ? '; Secure' : '';
   res.setHeader('set-cookie', `jf_gate=${gateHash(settings.accessCode)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 24 * 30}${secure}`);
   res.json({ ok: true, message: 'Unlocked for 30 days on this browser' });
+});
+
+// The access switch. Reading is open to anyone past the gate, but the state
+// only reveals codes to the owner. Flipping requires the owner: loopback or
+// the admin code header.
+app.get('/api/access', (req, res) => {
+  const settings = load('settings') || {};
+  const admin = isAdminReq(settings, req);
+  res.json({
+    ok: true,
+    publicMode: settings.publicMode === true,
+    openAccess: settings.openAccess === true,
+    accessCode: admin ? settings.accessCode : null,
+    adminCode: admin ? settings.adminCode : null,
+    youAreAdmin: admin
+  });
+});
+
+app.put('/api/access', (req, res) => {
+  const settings = load('settings') || {};
+  if (!isAdminReq(settings, req)) {
+    return res.status(403).json({ error: 'Only the owner can change access. On the host machine it just works; from elsewhere paste your admin code.' });
+  }
+  const { openAccess, publicMode } = req.body || {};
+  if (typeof openAccess === 'boolean') settings.openAccess = openAccess;
+  if (typeof publicMode === 'boolean') settings.publicMode = publicMode;
+  save('settings', settings);
+  console.log(`[jobforge] access switched: ${settings.openAccess ? 'open to everyone' : 'private with access code'}`);
+  res.json({
+    ok: true,
+    publicMode: settings.publicMode === true,
+    openAccess: settings.openAccess === true,
+    accessCode: settings.accessCode,
+    adminCode: settings.adminCode,
+    youAreAdmin: true,
+    message: settings.openAccess ? 'Open access is on. Anyone with the link can now use this cockpit.' : 'Private again. Visitors need the access code.'
+  });
 });
 
 app.use('/api', routes);
@@ -117,9 +138,11 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 8787;
 app.listen(PORT, () => {
   console.log(`[jobforge] API ready on http://localhost:${PORT}`);
-  if (gateActive()) {
-    console.log(`[jobforge] Public mode is ON. Visitors must enter access code: ${load('settings')?.accessCode}`);
-    console.log('[jobforge] Your own browser on this machine needs no code.');
+  const settings = load('settings') || {};
+  if (settings.publicMode) {
+    if (settings.openAccess) console.log('[jobforge] OPEN ACCESS: everyone with the link can use this cockpit.');
+    else console.log(`[jobforge] PRIVATE: visitors must enter access code ${settings.accessCode}. Flip the switch in Settings, Access, anytime.`);
+    console.log(`[jobforge] Admin code for remote control: ${settings.adminCode}`);
   }
   if (!fs.existsSync(dist)) console.log('[jobforge] Development mode: run "npm run dev" so the Vite client serves the interface on http://localhost:5173');
 });

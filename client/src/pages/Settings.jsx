@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Settings2, Zap, KeyRound, Download, Trash2, ShieldAlert, SlidersHorizontal, Sparkles, Puzzle, Copy, RefreshCw, Wand2, Save, RotateCcw } from 'lucide-react';
+import { Settings2, Zap, KeyRound, Download, Trash2, ShieldAlert, SlidersHorizontal, Sparkles, Puzzle, Copy, RefreshCw, Wand2, Save, RotateCcw, Globe2 } from 'lucide-react';
 import { api } from '../api.js';
 import { useApp } from '../App.jsx';
 import { SectionHead, Chip, Field, Reveal, Spinner, useToast, Toggle, Bar } from '../ui.jsx';
@@ -15,6 +15,9 @@ export default function SettingsPage() {
   const [busy, setBusy] = useState(false);
   const [fillData, setFillData] = useState({});
   const [fillFields, setFillFields] = useState({});
+  const [access, setAccess] = useState(null);
+  const [adminInput, setAdminInput] = useState('');
+  const [adminKey, setAdminKey] = useState(() => localStorage.getItem('jf_admin') || '');
 
   useEffect(() => {
     if (!boot) return;
@@ -22,6 +25,9 @@ export default function SettingsPage() {
     setWeights(boot.profile?.weights || null);
     setAuto(boot.settings.autoSubmit || { enabled: false, maxPerDay: 3 });
     api('/filldata').then((r) => { setFillData(r.filldata); setFillFields(Object.fromEntries(r.fields.map((f) => [f.id, f.label]))); }).catch(() => {});
+    api('/access', { headers: { 'content-type': 'application/json', ...(adminKey ? { 'x-jobforge-admin': adminKey } : {}) } })
+      .then((r) => setAccess({ ...r, youAreAdmin: r.youAreAdmin || !!adminKey }))
+      .catch(() => {});
   }, [boot]);
 
   if (!llm || !auto) return <div className="shimmer" style={{ height: 300 }} />;
@@ -61,6 +67,61 @@ export default function SettingsPage() {
     <div>
       <SectionHead kicker="Control room" title="Settings that stay on your machine"
         sub="Keys, weights, limits, and data. The Settings store is a local JSON file that git never sees." />
+
+      {/* access switch */}
+      <Reveal>
+        <div className="card" style={{ marginBottom: 18 }}>
+          <div style={{ display: 'flex', gap: 9, alignItems: 'center', marginBottom: 4 }}><Globe2 size={17} color="var(--molten)" /><h3>Access</h3>
+            {access?.openAccess ? <Chip tone="green">open to everyone</Chip> : access?.publicMode ? <Chip tone="amber">private with code</Chip> : <Chip tone="cyan">local only</Chip>}
+          </div>
+          <p style={{ fontSize: 12.5, color: 'var(--muted)', marginBottom: 14 }}>
+            You are the admin of this cockpit. Flip the switch to open it to everyone with the link, completely free to use, and flip it back to private whenever you want. On this machine it just works. From another browser, paste your admin code once.
+          </p>
+          {access?.youAreAdmin ? (
+            <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
+              <div className={`toggle ${access.openAccess ? 'on' : ''}`} style={{ width: 58, height: 32 }} onClick={async () => {
+                try {
+                  const res = await api('/access', { method: 'PUT', headers: { 'content-type': 'application/json', ...(adminKey ? { 'x-jobforge-admin': adminKey } : {}) }, body: { openAccess: !access.openAccess } });
+                  setAccess({ ...access, ...res });
+                  toast(res.message, 'ok');
+                } catch (e) { toast(e.message, 'err'); }
+              }}><i style={{ width: 24, height: 24 }} /></div>
+              <div style={{ flex: 1, minWidth: 220 }}>
+                <strong style={{ fontSize: 13.5, fontFamily: 'var(--font-display)' }}>{access.openAccess ? 'Open access' : access.publicMode ? 'Private with access code' : 'Local only'}</strong>
+                <p style={{ fontSize: 11.5, color: 'var(--faint)', marginTop: 2 }}>
+                  {access.openAccess ? 'Anyone with the link can use the cockpit right now. Your data still lives only on your machine.' : access.publicMode ? 'Visitors must enter the access code once per browser.' : 'The gate is off because the cockpit is not exposed beyond this machine.'}
+                </p>
+              </div>
+              {access.publicMode && !access.openAccess && access.accessCode && (
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <code className="mono" style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid var(--border)', borderRadius: 10, padding: '8px 12px', fontSize: 15, letterSpacing: '0.25em', color: '#ffb28a' }}>{access.accessCode}</code>
+                  <button className="btn ghost sm" onClick={() => { navigator.clipboard.writeText(access.accessCode); toast('Access code copied', 'ok'); }}><Copy size={12} /></button>
+                </div>
+              )}
+            </div>
+          ) : access?.publicMode ? (
+            <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+              <Field label="Admin code" hint="Printed in the terminal where JobForge runs">
+                <input className="input mono" style={{ minWidth: 260 }} value={adminInput} onChange={(e) => setAdminInput(e.target.value.trim())} placeholder="adm_..." />
+              </Field>
+              <button className="btn primary sm" onClick={async () => {
+                try {
+                  const res = await api('/access', { method: 'PUT', headers: { 'content-type': 'application/json', 'x-jobforge-admin': adminInput }, body: {} });
+                  localStorage.setItem('jf_admin', adminInput);
+                  setAdminKey(adminInput);
+                  setAccess({ ...access, ...res, youAreAdmin: true });
+                  toast('Admin verified on this browser', 'ok');
+                } catch (e) { toast(e.message, 'err'); }
+              }}>Verify</button>
+            </div>
+          ) : null}
+          {access?.youAreAdmin && access.adminCode && (
+            <p style={{ fontSize: 11, color: 'var(--faint)', marginTop: 10 }}>
+              Admin code for controlling access from any browser: <code className="mono" style={{ color: '#8ce8f7' }}>{access.adminCode}</code>
+            </p>
+          )}
+        </div>
+      </Reveal>
 
       {/* AI providers */}
       <Reveal>
@@ -123,8 +184,8 @@ export default function SettingsPage() {
             The helper lives in the <code className="mono">extension/</code> folder of this project. Load it once in Chrome through Manage Extensions and Developer Mode, then pair it with the token below. It captures any posting you are viewing on LinkedIn, Naukri, or a company career page, scores it instantly, and prefills application forms from your approved answers. It never submits anything for you.
           </p>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-            <code className="mono" style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid var(--border)', borderRadius: 10, padding: '9px 13px', fontSize: 12.5, letterSpacing: '0.03em' }}>{boot.extensionToken || 'token not ready'}</code>
-            <button className="btn sm" onClick={() => { navigator.clipboard.writeText(boot.extensionToken || ''); toast('Extension token copied', 'ok'); }}><Copy size={13} /> Copy token</button>
+            <code className="mono" style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid var(--border)', borderRadius: 10, padding: '9px 13px', fontSize: 12.5, letterSpacing: '0.03em' }}>{boot.extensionToken || 'visible to the owner on the host machine'}</code>
+            {boot.extensionToken && <button className="btn sm" onClick={() => { navigator.clipboard.writeText(boot.extensionToken); toast('Extension token copied', 'ok'); }}><Copy size={13} /> Copy token</button>}
             <button className="btn ghost sm" onClick={async () => {
               try { await refresh(); toast('Token state refreshed', 'ok'); } catch (e) { toast(e.message, 'err'); }
             }}><RefreshCw size={13} /></button>

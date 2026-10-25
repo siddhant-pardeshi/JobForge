@@ -64,6 +64,8 @@ export const DEFAULT_SETTINGS = {
   refresh: { auto: true, intervalMinutes: 20, runOnStart: true },
   extensionToken: null,
   accessCode: null,
+  adminCode: null,
+  openAccess: false,
   onboarded: false
 };
 
@@ -98,6 +100,11 @@ export function bootstrap() {
   // required for the owner working on this machine.
   if (!settings.accessCode) {
     settings.accessCode = String(100000 + crypto.randomBytes(4).readUInt32BE(0) % 900000);
+    save('settings', settings);
+  }
+  // Admin code lets the owner flip the access switch from any browser.
+  if (!settings.adminCode) {
+    settings.adminCode = `adm_${crypto.randomBytes(9).toString('hex')}`;
     save('settings', settings);
   }
   if (!load('answers')) save('answers', DEFAULT_ANSWERS);
