@@ -11,7 +11,7 @@
     .lbl { font-family: 'Inter', Arial, sans-serif; font-size: 13.5px; fill: #d8d4e2; }
     .val { font-family: 'JetBrains Mono', monospace; font-size: 13.5px; font-weight: 700; fill: #ffb28a; }
     .barbg3 { fill: rgba(255,255,255,0.07); }
-    .barfill3 { fill: url(#g3); transform-origin: left; animation: grow3 1.4s cubic-bezier(0.22,1,0.36,1) both; }
+    .barfill3 { fill: url(#g3); transform-box: fill-box; transform-origin: left center; animation: grow3 1.4s cubic-bezier(0.22,1,0.36,1) both; }
     @keyframes grow3 { from { transform: scaleX(0); } }
     .ringbg { stroke: rgba(255,255,255,0.09); }
     .ringarc { stroke: #34d399; stroke-linecap: round; stroke-dasharray: 408; stroke-dashoffset: 408; animation: draw 2s cubic-bezier(0.22,1,0.36,1) 0.5s forwards; }

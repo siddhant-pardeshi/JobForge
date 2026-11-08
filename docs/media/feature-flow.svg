@@ -55,9 +55,6 @@
   <path class="pulse3" d="M 780 151 H 870"/>
 
   <!-- connector down -->
-  <path class="wire" d="M 970 194 V 228 H 160 V 228"/>
-  <path class="pulse" d="M 970 194 V 228 H 160 228" style="animation-delay: 0.4s"/>
-  <path class="wire" d="M 970 194 V 230 H 160"/>
 
   <!-- nodes row 2 -->
   <g transform="translate(60, 196)">

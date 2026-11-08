@@ -18,8 +18,8 @@
     .ks { font-family: 'Inter', Arial, sans-serif; font-size: 10.5px; fill: #8b8496; }
     .st { font-family: 'Inter', Arial, sans-serif; font-size: 9.5px; font-weight: 700; }
     .mover { animation: cross 6s ease-in-out infinite; }
-    @keyframes cross { 0%, 12% { transform: translate(0, 0); } 38%, 62% { transform: translate(300px, 0); } 88%, 100% { transform: translate(300px, 0); } }
-    .bell { transform-origin: 24px 24px; animation: ringk 3s ease-in-out 1s infinite; }
+    @keyframes cross { 0%, 12% { transform: translate(98px, 216px); } 38%, 62% { transform: translate(445px, 216px); } 88%, 100% { transform: translate(445px, 216px); } }
+    .bell { transform-box: fill-box; transform-origin: center; animation: ringk 3s ease-in-out 1s infinite; }
     @keyframes ringk { 0%, 100% { transform: rotate(0); } 6% { transform: rotate(20deg); } 12% { transform: rotate(-16deg); } 18% { transform: rotate(10deg); } 24% { transform: rotate(0); } }
     .arrow { stroke: url(#slide); stroke-width: 2.5; stroke-dasharray: 6 6; fill: none; opacity: 0.7; animation: dashmove 1.2s linear infinite; }
     @keyframes dashmove { to { stroke-dashoffset: -12; } }
@@ -49,12 +49,11 @@
   </g>
 
   <!-- animated card crossing columns -->
-  <g class="mover" transform="translate(88, 240)">
+  <g class="mover">
     <rect width="280" height="46" rx="10" fill="#14142a" stroke="url(#slide)" stroke-width="1.5"/>
     <text x="16" y="22" class="kt">Software Engineer, IAM</text>
     <text x="16" y="38" class="ks">Rubrik · packet forged → preparing</text>
   </g>
-  <path class="arrow" d="M 380 263 H 1180"/>
 
   <!-- reminder bell -->
   <g transform="translate(1120, 20)">

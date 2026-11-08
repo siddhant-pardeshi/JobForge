@@ -14,11 +14,11 @@
     .live { fill: #34d399; animation: pulse 1.8s ease-in-out infinite; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
     .barbg { fill: rgba(255,255,255,0.07); }
-    .barfill { fill: url(#g2); transform-origin: left; animation: sweep 2.6s cubic-bezier(0.22,1,0.36,1) infinite alternate; }
+    .barfill { fill: url(#g2); transform-box: fill-box; transform-origin: left center; animation: sweep 2.6s cubic-bezier(0.22,1,0.36,1) infinite alternate; }
     @keyframes sweep { from { transform: scaleX(0.55); } to { transform: scaleX(1); } }
-    .spin { transform-origin: 1122px 78px; animation: rot 2.4s linear infinite; }
+    .spin { transform-box: fill-box; transform-origin: center; animation: rot 2.4s linear infinite; }
     @keyframes rot { to { transform: rotate(360deg); } }
-    .closed { animation: stamp 4s ease-in-out infinite; }
+    .closed { transform-box: fill-box; transform-origin: center; animation: stamp 4s ease-in-out infinite; }
     @keyframes stamp { 0%, 40% { opacity: 0; transform: scale(1.6) rotate(-14deg); } 50%, 100% { opacity: 1; transform: scale(1) rotate(-8deg); } }
     .cnt { font-family: 'JetBrains Mono', monospace; font-size: 30px; font-weight: 700; fill: #ffb28a; }
   </style>
@@ -56,7 +56,7 @@
   <!-- spinner + counter -->
   <g transform="translate(880, 110)">
     <rect class="panel2" x="0" y="0" width="260" height="176" rx="12"/>
-    <g class="spin" transform="translate(1122, 78)">
+    <g class="spin" transform="translate(130, 52)">
       <circle cx="0" cy="0" r="16" stroke="url(#g2)" stroke-width="4" fill="none" stroke-dasharray="76 25" stroke-linecap="round"/>
     </g>
     <text class="sub2" x="18" y="130">refresh cycle</text>
