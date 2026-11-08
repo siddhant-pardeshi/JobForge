@@ -75,7 +75,7 @@ export default function SettingsPage() {
             {access?.openAccess ? <Chip tone="green">open to everyone</Chip> : access?.publicMode ? <Chip tone="amber">private with code</Chip> : <Chip tone="cyan">local only</Chip>}
           </div>
           <p style={{ fontSize: 12.5, color: 'var(--muted)', marginBottom: 14 }}>
-            You are the admin of this cockpit. Flip the switch to open it to everyone with the link, completely free to use, and flip it back to private whenever you want. On this machine it just works. From another browser, paste your admin code once.
+            You are the admin of this cockpit. Open access lets anyone with the link use the hunt: live boards, scored matches, scam screening, pay insights and relocation math, all free. Your data stays read only for guests: settings, profile edits, tracker changes and exports stay with you. On this machine the switch just works. From another browser, paste your admin code once.
           </p>
           {access?.youAreAdmin ? (
             <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>

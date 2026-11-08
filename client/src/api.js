@@ -1,7 +1,12 @@
 export async function api(path, options = {}) {
+  // Once verified in the Access card, the admin code rides along on every
+  // request so a remote owner gets the full owner experience in that browser.
+  const headers = { 'content-type': 'application/json', ...options.headers };
+  const admin = localStorage.getItem('jf_admin');
+  if (admin) headers['x-jobforge-admin'] = admin;
   const res = await fetch(`/api${path}`, {
-    headers: { 'content-type': 'application/json' },
     ...options,
+    headers,
     body: options.body && typeof options.body !== 'string' ? JSON.stringify(options.body) : options.body
   });
   let data = null;

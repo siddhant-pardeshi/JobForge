@@ -87,7 +87,7 @@ Public mode turns your instance into a shared deployment:
 2. `cloudflared tunnel --url http://localhost:8787`
 3. Share the URL
 
-By default it opens with **free access for everyone**. Settings, Access holds the switch: flip to private and visitors need a six digit code, flip back and the link is open to all. Only you can flip it, using the host machine or the admin code printed at startup, and the access code, admin code and pairing token are never sent to guests.
+By default it opens with **free access for everyone**. Guests get the full hunt as read only: live boards, scored matches, skill gap and pay insights, scam screening and relocation math. Everything that mutates your data or config is owner only: settings, profile, tracker changes, imports, exports and resets, enforced server side. Settings, Access holds the switch: flip to private and visitors need a six digit code, flip back and the link is open to all. Only you can flip it, using the host machine or the admin code printed at startup, and the access code, admin code, pairing token and resume text are never sent to guests.
 
 ## What it deliberately does not do
 

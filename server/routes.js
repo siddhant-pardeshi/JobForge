@@ -17,6 +17,16 @@ import { fetchAllSources, runSource } from './services/refresh.js';
 import { SEED_COMPANIES, SEED_META, parseCareersUrl } from './seedRegistry.js';
 
 const router = express.Router();
+
+// Owner-only mutations. In open access mode guests get the full read only
+// cockpit plus utility screens, but everything that changes the owner's
+// data, keys, or access configuration requires the host machine or the
+// admin code header.
+function requireAdmin(req, res, next) {
+  const settings = load('settings') || {};
+  if (isAdminReq(settings, req)) return next();
+  res.status(403).json({ error: 'Owner only. On the host machine it just works; from another browser, verify your admin code in Settings, Access.' });
+}
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
@@ -136,26 +146,29 @@ function backfillSalaries() {
 router.get('/bootstrap', ah(async (req, res) => {
   const settings = getSettings();
   const companies = load('companies') || [];
-  // The pairing token is only shown to the owner; guests never see it.
+  // The pairing token is only shown to the owner; guests never see it. The
+  // owner's resume text and the host filesystem path never leave the machine.
   const admin = isAdminReq(settings, req);
+  const profile = getProfile();
+  const guestProfile = profile ? { ...profile, resumeText: undefined } : null;
   res.json({
-    profile: getProfile(),
+    profile: admin ? profile : guestProfile,
     settings: maskSettings(settings),
     answers: load('answers') || DEFAULT_ANSWERS,
     llm: llmStatus(settings),
     presets: PRESETS,
     atsProviders: ATS_PROVIDERS,
-    storageDir: DATA_DIR,
     refresh: settings.refresh || DEFAULT_SETTINGS.refresh,
     extensionToken: admin ? (settings.extensionToken || '') : '',
     access: { publicMode: settings.publicMode === true, openAccess: settings.openAccess === true, youAreAdmin: admin },
     seedMeta: SEED_META,
-    sourceCount: companies.length
+    sourceCount: companies.length,
+    youAreAdmin: admin
   });
 }));
 
 // ---- resume ----
-router.post('/resume', upload.single('file'), ah(async (req, res) => {
+router.post('/resume', requireAdmin, upload.single('file'), ah(async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file received' });
   const parsed = await extractText(req.file.buffer, req.file.originalname);
   const draft = draftProfile(parsed.text, req.file.originalname);
@@ -164,7 +177,7 @@ router.post('/resume', upload.single('file'), ah(async (req, res) => {
   res.json({ draft, warning: parsed.warning, scanned: parsed.scanned, storedAs: path.basename(outPath) });
 }));
 
-router.post('/resume/text', ah(async (req, res) => {
+router.post('/resume/text', requireAdmin, ah(async (req, res) => {
   const text = String(req.body?.text || '');
   if (text.trim().length < 100) return res.status(400).json({ error: 'Paste at least a few real lines so extraction has something to work with' });
   const draft = draftProfile(text, null);
@@ -172,7 +185,7 @@ router.post('/resume/text', ah(async (req, res) => {
 }));
 
 // ---- profile ----
-router.put('/profile', ah(async (req, res) => {
+router.put('/profile', requireAdmin, ah(async (req, res) => {
   const existing = getProfile();
   const incoming = { ...req.body };
   if (existing && !incoming.resumeText) incoming.resumeText = existing.resumeText;
@@ -195,7 +208,11 @@ router.get('/jobs', ah(async (req, res) => {
     if (j.status === 'closed') lanes.closed++;
     else if (lanes[j.match.lane] !== undefined) lanes[j.match.lane]++;
   }
-  res.json({ jobs, lanes, total: jobs.length, scoredAt: new Date().toISOString() });
+  // The list view never ships full descriptions; the drawer fetches them
+  // per job from /jobs/:id. This keeps the payload a fraction of the size,
+  // which matters enormously over tunnels.
+  const list = jobs.map(({ description, ...rest }) => ({ ...rest, snippet: (description || '').slice(0, 240) }));
+  res.json({ jobs: list, lanes, total: jobs.length, scoredAt: new Date().toISOString() });
 }));
 
 router.get('/jobs/:id', ah(async (req, res) => {
@@ -220,7 +237,7 @@ router.get('/insights', ah(async (req, res) => {
   res.json({ ok: true, insights: salaryInsights(scoreAll(profile)) });
 }));
 
-router.post('/jobs/import', ah(async (req, res) => {
+router.post('/jobs/import', requireAdmin, ah(async (req, res) => {
   const text = String(req.body?.text || '');
   const url = req.body?.url || null;
   if (text.trim().length < 80) return res.status(400).json({ error: 'Paste the full posting text, at least a few sentences' });
@@ -264,7 +281,7 @@ router.post('/jobs/import', ah(async (req, res) => {
 }));
 
 // Refresh every enabled board now.
-router.post('/jobs/fetch', ah(async (req, res) => {
+router.post('/jobs/fetch', requireAdmin, ah(async (req, res) => {
   const report = await fetchAllSources();
   const added = report.reduce((a, r) => a + (r.added || 0), 0);
   const closed = report.reduce((a, r) => a + (r.closed || 0), 0);
@@ -276,7 +293,7 @@ router.post('/jobs/fetch', ah(async (req, res) => {
 }));
 
 // Refresh one source now.
-router.post('/jobs/fetch/:companyId', ah(async (req, res) => {
+router.post('/jobs/fetch/:companyId', requireAdmin, ah(async (req, res) => {
   const company = (load('companies') || []).find((c) => c.id === req.params.companyId);
   if (!company) return res.status(404).json({ error: 'Source not found' });
   if (!['greenhouse', 'lever', 'ashby'].includes(company.atsProvider)) return res.status(400).json({ error: 'This source has no listing adapter' });
@@ -284,7 +301,7 @@ router.post('/jobs/fetch/:companyId', ah(async (req, res) => {
   res.json({ ok: run.ok, run });
 }));
 
-router.post('/jobs/:id/action', ah(async (req, res) => {
+router.post('/jobs/:id/action', requireAdmin, ah(async (req, res) => {
   const { action, note } = req.body || {};
   const jobs = load('jobs') || [];
   const job = jobs.find((j) => j.id === req.params.id);
@@ -296,7 +313,7 @@ router.post('/jobs/:id/action', ah(async (req, res) => {
   res.json({ ok: true });
 }));
 
-router.post('/jobs/:id/packet', ah(async (req, res) => {
+router.post('/jobs/:id/packet', requireAdmin, ah(async (req, res) => {
   const profile = getProfile();
   if (!profile) return res.status(400).json({ error: 'Upload and confirm a resume first' });
   const job = assembleJobs().find((j) => j.id === req.params.id);
@@ -371,7 +388,7 @@ router.get('/companies', ah(async (req, res) => {
   });
 }));
 
-router.post('/companies', ah(async (req, res) => {
+router.post('/companies', requireAdmin, ah(async (req, res) => {
   const body = req.body || {};
   let atsProvider = body.atsProvider;
   let handle = body.handle;
@@ -406,7 +423,7 @@ router.post('/companies', ah(async (req, res) => {
   res.json({ ok: true, company, verification });
 }));
 
-router.post('/companies/:id/refresh', ah(async (req, res) => {
+router.post('/companies/:id/refresh', requireAdmin, ah(async (req, res) => {
   const companies = load('companies') || [];
   const company = companies.find((c) => c.id === req.params.id);
   if (!company) return res.status(404).json({ error: 'Source not found' });
@@ -419,7 +436,7 @@ router.post('/companies/:id/refresh', ah(async (req, res) => {
   res.json({ ok: true, company, verification });
 }));
 
-router.delete('/companies/:id', ah(async (req, res) => {
+router.delete('/companies/:id', requireAdmin, ah(async (req, res) => {
   const companies = (load('companies') || []).filter((c) => c.id !== req.params.id);
   save('companies', companies);
   res.json({ ok: true });
@@ -494,7 +511,7 @@ router.get('/agenda', ah(async (req, res) => {
 }));
 
 // Interview rounds and reminders attached to a tracked application.
-router.post('/applications/:id/events', ah(async (req, res) => {
+router.post('/applications/:id/events', requireAdmin, ah(async (req, res) => {
   const { label, at, mode, note } = req.body || {};
   if (!label || !at) return res.status(400).json({ error: 'A round label and a date and time are both required' });
   const when = new Date(at);
@@ -524,7 +541,7 @@ router.post('/applications/:id/events', ah(async (req, res) => {
   res.json({ ok: true, application: app, autoMoved });
 }));
 
-router.delete('/applications/:id/events/:eventId', ah(async (req, res) => {
+router.delete('/applications/:id/events/:eventId', requireAdmin, ah(async (req, res) => {
   const apps = load('applications') || [];
   const app = apps.find((a) => a.id === req.params.id);
   if (!app) return res.status(404).json({ error: 'Application not found' });
@@ -545,7 +562,7 @@ router.get('/relocation', ah(async (req, res) => {
   });
 }));
 
-router.put('/relocation', ah(async (req, res) => {
+router.put('/relocation', requireAdmin, ah(async (req, res) => {
   const settings = getSettings();
   settings.relocation = { ...settings.relocation, ...req.body };
   save('settings', settings);
@@ -623,7 +640,7 @@ router.get('/applications/export.csv', ah(async (req, res) => {
   res.send(csv);
 }));
 
-router.post('/applications', ah(async (req, res) => {
+router.post('/applications', requireAdmin, ah(async (req, res) => {
   const jobId = req.body?.jobId;
   const job = assembleJobs().find((j) => j.id === jobId);
   if (!job) return res.status(404).json({ error: 'Job not found' });
@@ -649,7 +666,7 @@ router.post('/applications', ah(async (req, res) => {
   res.json({ ok: true, application: app });
 }));
 
-router.patch('/applications/:id', ah(async (req, res) => {
+router.patch('/applications/:id', requireAdmin, ah(async (req, res) => {
   const { state, note } = req.body || {};
   const apps = load('applications') || [];
   const app = apps.find((a) => a.id === req.params.id);
@@ -668,7 +685,7 @@ router.patch('/applications/:id', ah(async (req, res) => {
   res.json({ ok: true, application: app });
 }));
 
-router.post('/applications/:id/receipt', ah(async (req, res) => {
+router.post('/applications/:id/receipt', requireAdmin, ah(async (req, res) => {
   const apps = load('applications') || [];
   const app = apps.find((a) => a.id === req.params.id);
   if (!app) return res.status(404).json({ error: 'Application not found' });
@@ -684,8 +701,16 @@ router.post('/applications/:id/receipt', ah(async (req, res) => {
 // ---- settings ----
 router.put('/settings', ah(async (req, res) => {
   const settings = getSettings();
+  const admin = isAdminReq(settings, req);
   const incoming = req.body || {};
+  // Guests may only touch presentation level preferences. Everything that
+  // affects keys, security, access or the owner's automation stays with the
+  // owner: on the host machine it just works, remotely via the admin header.
+  const adminOnly = new Set(['llm', 'autoSubmit', 'refresh', 'publicMode', 'openAccess', 'accessCode', 'adminCode', 'extensionToken', 'relocation']);
   for (const key of Object.keys(incoming)) {
+    if (!admin && (adminOnly.has(key) || !['onboarded'].includes(key))) {
+      return res.status(403).json({ error: 'Owner only. On the host machine it just works; from another browser, verify your admin code in Settings, Access.' });
+    }
     if (key === 'llm') {
       settings.llm = { ...settings.llm, ...incoming.llm, providers: { ...(settings.llm?.providers || {}), ...(incoming.llm?.providers || {}) } };
       for (const p of Object.keys(incoming.llm?.providers || {})) {
@@ -708,11 +733,11 @@ router.post('/settings/llm/test', ah(async (req, res) => {
   res.json({ ok: result.ok, message: result.message, providerId });
 }));
 
-router.get('/answers', ah(async (req, res) => {
+router.get('/answers', requireAdmin, ah(async (req, res) => {
   res.json({ answers: load('answers') || DEFAULT_ANSWERS });
 }));
 
-router.put('/answers/:id', ah(async (req, res) => {
+router.put('/answers/:id', requireAdmin, ah(async (req, res) => {
   const answers = load('answers') || DEFAULT_ANSWERS;
   const idx = answers.findIndex((a) => a.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'Answer not found' });
@@ -723,11 +748,11 @@ router.put('/answers/:id', ah(async (req, res) => {
 
 // Editable autofill data. These values override everything the helper fills,
 // so a wrong value is fixed once here and never autofills wrong again.
-router.get('/filldata', ah(async (req, res) => {
+router.get('/filldata', requireAdmin, ah(async (req, res) => {
   res.json({ filldata: load('filldata') || {}, fields: FILL_FIELDS });
 }));
 
-router.put('/filldata', ah(async (req, res) => {
+router.put('/filldata', requireAdmin, ah(async (req, res) => {
   const existing = load('filldata') || {};
   const incoming = req.body || {};
   const merged = { ...existing };
@@ -856,7 +881,7 @@ router.get('/extension/packet', ah(async (req, res) => {
 }));
 
 // ---- data ----
-router.get('/export', ah(async (req, res) => {
+router.get('/export', requireAdmin, ah(async (req, res) => {
   const bundle = {};
   for (const name of ['settings', 'profile', 'jobs', 'applications', 'companies', 'scamlog', 'answers', 'packets', 'sourceRuns', 'filldata']) {
     bundle[name] = load(name);
@@ -868,7 +893,7 @@ router.get('/export', ah(async (req, res) => {
   res.json(bundle);
 }));
 
-router.post('/reset', ah(async (req, res) => {
+router.post('/reset', requireAdmin, ah(async (req, res) => {
   if (!req.body?.confirm) return res.status(400).json({ error: 'Pass confirm true. This wipes profile, jobs, tracker, logs, and settings' });
   for (const name of ['settings', 'profile', 'jobs', 'applications', 'companies', 'scamlog', 'answers', 'packets', 'sourceRuns', 'filldata']) {
     try { fs.unlinkSync(path.join(DATA_DIR, `${name}.json`)); } catch { /* already gone */ }
