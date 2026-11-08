@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300" role="img" aria-label="Live boards">
+  <defs>
+    <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff5c1a"/><stop offset="0.5" stop-color="#ff2e88"/><stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+  </defs>
+  <style>
+    .bg2 { fill: #0a0a14; }
+    .panel2 { fill: #12121f; stroke: #ffffff22; }
+    .ttl2 { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 26px; font-weight: 700; fill: #f5f3ef; }
+    .sub2 { font-family: 'Inter', Arial, sans-serif; font-size: 14px; fill: #a8a3b5; }
+    .rowname { font-family: 'Inter', Arial, sans-serif; font-size: 13.5px; font-weight: 600; fill: #f5f3ef; }
+    .rowsub { font-family: 'Inter', Arial, sans-serif; font-size: 11.5px; fill: #8b8496; }
+    .live { fill: #34d399; animation: pulse 1.8s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+    .barbg { fill: rgba(255,255,255,0.07); }
+    .barfill { fill: url(#g2); transform-origin: left; animation: sweep 2.6s cubic-bezier(0.22,1,0.36,1) infinite alternate; }
+    @keyframes sweep { from { transform: scaleX(0.55); } to { transform: scaleX(1); } }
+    .spin { transform-origin: 1122px 78px; animation: rot 2.4s linear infinite; }
+    @keyframes rot { to { transform: rotate(360deg); } }
+    .closed { animation: stamp 4s ease-in-out infinite; }
+    @keyframes stamp { 0%, 40% { opacity: 0; transform: scale(1.6) rotate(-14deg); } 50%, 100% { opacity: 1; transform: scale(1) rotate(-8deg); } }
+    .cnt { font-family: 'JetBrains Mono', monospace; font-size: 30px; font-weight: 700; fill: #ffb28a; }
+  </style>
+  <rect class="bg2" width="1200" height="300"/>
+
+  <text class="ttl2" x="60" y="56">Boards that <tspan fill="url(#g2)">refresh themselves.</tspan></text>
+  <text class="sub2" x="60" y="84">A scheduler polls every board every 20 minutes. Closures are honest: two misses to close, reposts reopen.</text>
+
+  <!-- board rows -->
+  <g transform="translate(60, 110)">
+    <rect class="panel2" x="0" y="0" width="760" height="52" rx="10"/>
+    <circle class="live" cx="24" cy="26" r="5"/>
+    <text class="rowname" x="42" y="22">Zscaler</text>
+    <text class="rowsub" x="42" y="40">Pune engineering center · greenhouse</text>
+    <rect class="barbg" x="420" y="18" width="240" height="8" rx="4"/><rect class="barfill" x="420" y="18" width="240" height="8" rx="4" style="animation-delay: 0s"/>
+    <text class="rowname" x="690" y="31" fill="#8af0c8" font-family="JetBrains Mono, monospace">352</text>
+  </g>
+  <g transform="translate(60, 172)">
+    <rect class="panel2" x="0" y="0" width="760" height="52" rx="10"/>
+    <circle class="live" cx="24" cy="26" r="5" style="animation-delay: 0.6s"/>
+    <text class="rowname" x="42" y="22">Databricks</text>
+    <text class="rowsub" x="42" y="40">186 India roles · greenhouse</text>
+    <rect class="barbg" x="420" y="18" width="240" height="8" rx="4"/><rect class="barfill" x="420" y="18" width="240" height="8" rx="4" style="animation-delay: 0.5s"/>
+    <text class="rowname" x="690" y="31" fill="#8af0c8" font-family="JetBrains Mono, monospace">897</text>
+  </g>
+  <g transform="translate(60, 234)">
+    <rect class="panel2" x="0" y="0" width="760" height="52" rx="10"/>
+    <circle class="live" cx="24" cy="26" r="5" style="animation-delay: 1.2s"/>
+    <text class="rowname" x="42" y="22">Meesho</text>
+    <text class="rowsub" x="42" y="40">Bangalore · lever</text>
+    <rect class="barbg" x="420" y="18" width="240" height="8" rx="4"/><rect class="barfill" x="420" y="18" width="240" height="8" rx="4" style="animation-delay: 1s"/>
+    <text class="rowname" x="690" y="31" fill="#8af0c8" font-family="JetBrains Mono, monospace">58</text>
+  </g>
+
+  <!-- spinner + counter -->
+  <g transform="translate(880, 110)">
+    <rect class="panel2" x="0" y="0" width="260" height="176" rx="12"/>
+    <g class="spin" transform="translate(1122, 78)">
+      <circle cx="0" cy="0" r="16" stroke="url(#g2)" stroke-width="4" fill="none" stroke-dasharray="76 25" stroke-linecap="round"/>
+    </g>
+    <text class="sub2" x="18" y="130">refresh cycle</text>
+    <text class="cnt" x="18" y="160">5,843</text>
+    <text class="sub2" x="105" y="160">live postings</text>
+  </g>
+
+  <!-- closed stamp -->
+  <g class="closed" transform="translate(940, 236)">
+    <rect x="0" y="0" width="200" height="44" rx="8" fill="rgba(251,77,77,0.1)" stroke="rgba(251,77,77,0.55)"/>
+    <text x="18" y="28" font-family="Space Grotesk, Arial, sans-serif" font-size="15" font-weight="700" fill="#ffa2a2">CLOSED · after 2 misses</text>
+  </g>
+</svg>

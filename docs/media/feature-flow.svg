@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300" role="img" aria-label="How JobForge works">
+  <defs>
+    <linearGradient id="g7" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff5c1a"/><stop offset="0.5" stop-color="#ff2e88"/><stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+  </defs>
+  <style>
+    .bg7 { fill: #0a0a14; }
+    .ttl7 { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 26px; font-weight: 700; fill: #f5f3ef; }
+    .sub7 { font-family: 'Inter', Arial, sans-serif; font-size: 14px; fill: #a8a3b5; }
+    .node { fill: #12121f; stroke: #ffffff2e; }
+    .nt { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 14px; font-weight: 700; fill: #f5f3ef; }
+    .nd { font-family: 'Inter', Arial, sans-serif; font-size: 10.5px; fill: #8b8496; }
+    .wire { stroke: rgba(255,255,255,0.25); stroke-width: 2; fill: none; }
+    .pulse { stroke: url(#g7); stroke-width: 3; fill: none; stroke-dasharray: 10 90; animation: travel 2.6s linear infinite; }
+    .pulse2 { stroke: url(#g7); stroke-width: 3; fill: none; stroke-dasharray: 10 90; animation: travel 2.6s linear infinite; animation-delay: 0.9s; }
+    .pulse3 { stroke: url(#g7); stroke-width: 3; fill: none; stroke-dasharray: 10 90; animation: travel 2.6s linear infinite; animation-delay: 1.8s; }
+    @keyframes travel { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -100; } }
+    .gate { fill: rgba(251,191,36,0.08); stroke: rgba(251,191,36,0.5); }
+  </style>
+  <rect class="bg7" width="1200" height="300"/>
+
+  <text class="ttl7" x="60" y="50">How a posting becomes <tspan fill="url(#g7)">an application.</tspan></text>
+  <text class="sub7" x="60" y="78">One machine, one cockpit, one click that submits. Everything else is automated.</text>
+
+  <!-- nodes row 1 -->
+  <g transform="translate(60, 108)">
+    <rect class="node" x="0" y="0" width="200" height="86" rx="14"/>
+    <text class="nt" x="18" y="34">Your resume</text>
+    <text class="nd" x="18" y="56">parsed locally into a</text>
+    <text class="nd" x="18" y="72">verified profile</text>
+
+    <rect class="node" x="290" y="0" width="200" height="86" rx="14"/>
+    <text class="nt" x="308" y="34">21 live boards</text>
+    <text class="nd" x="308" y="56">polled every 20 min,</text>
+    <text class="nd" x="308" y="72">closures detected</text>
+
+    <rect class="node" x="580" y="0" width="200" height="86" rx="14"/>
+    <text class="nt" x="598" y="34">Scoring engine</text>
+    <text class="nd" x="598" y="56">seven components,</text>
+    <text class="nd" x="598" y="72">every reason shown</text>
+
+    <rect class="node" x="870" y="0" width="200" height="86" rx="14"/>
+    <text class="nt" x="888" y="34">Scam shield</text>
+    <text class="nd" x="888" y="56">23 indicators on posts</text>
+    <text class="nd" x="888" y="72">and open emails</text>
+  </g>
+
+  <!-- wires row 1 -->
+  <path class="wire" d="M 260 151 H 290"/>
+  <path class="pulse" d="M 260 151 H 290"/>
+  <path class="wire" d="M 490 151 H 580"/>
+  <path class="pulse2" d="M 490 151 H 580"/>
+  <path class="wire" d="M 780 151 H 870"/>
+  <path class="pulse3" d="M 780 151 H 870"/>
+
+  <!-- connector down -->
+  <path class="wire" d="M 970 194 V 228 H 160 V 228"/>
+  <path class="pulse" d="M 970 194 V 228 H 160 228" style="animation-delay: 0.4s"/>
+  <path class="wire" d="M 970 194 V 230 H 160"/>
+
+  <!-- nodes row 2 -->
+  <g transform="translate(60, 196)">
+    <rect class="node" x="0" y="0" width="220" height="86" rx="14"/>
+    <text class="nt" x="18" y="34">Application packets</text>
+    <text class="nd" x="18" y="56">cover letter, referral note,</text>
+    <text class="nd" x="18" y="72">prep kit · nothing invented</text>
+
+    <rect class="node" x="300" y="0" width="220" height="86" rx="14" fill="rgba(34,211,238,0.05)"/>
+    <text class="nt" x="318" y="34">Chrome helper</text>
+    <text class="nd" x="318" y="56">capture on LinkedIn, Naukri,</text>
+    <text class="nd" x="318" y="72">autofill · mail screening</text>
+
+    <rect class="node" x="600" y="0" width="220" height="86" rx="14"/>
+    <text class="nt" x="618" y="34">Self moving board</text>
+    <text class="nd" x="618" y="56">rounds scheduled, reminders</text>
+    <text class="nd" x="618" y="72">an hour before, receipts</text>
+
+    <rect class="gate" x="900" y="0" width="180" height="86" rx="14"/>
+    <text class="nt" x="918" y="34" fill="#ffd884">Your submit click</text>
+    <text class="nd" x="918" y="56">the one step that always</text>
+    <text class="nd" x="918" y="72">stays with you</text>
+  </g>
+
+  <!-- wires row 2 -->
+  <path class="wire" d="M 280 239 H 300"/>
+  <path class="pulse2" d="M 280 239 H 300"/>
+  <path class="wire" d="M 520 239 H 600"/>
+  <path class="pulse3" d="M 520 239 H 600"/>
+  <path class="wire" d="M 820 239 H 900"/>
+  <path class="pulse" d="M 820 239 H 900"/>
+</svg>

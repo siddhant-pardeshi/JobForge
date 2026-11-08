@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300" role="img" aria-label="Packets">
+  <defs>
+    <linearGradient id="g5" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff5c1a"/><stop offset="0.5" stop-color="#ff2e88"/><stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+  </defs>
+  <style>
+    .bg5 { fill: #0a0a14; }
+    .ttl5 { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 26px; font-weight: 700; fill: #f5f3ef; }
+    .sub5 { font-family: 'Inter', Arial, sans-serif; font-size: 14px; fill: #a8a3b5; }
+    .panel5 { fill: #12121f; stroke: #ffffff22; }
+    .typed5 { stroke: #ffb28a; stroke-width: 4; stroke-linecap: round; stroke-dasharray: 200; stroke-dashoffset: 200; animation: type5 3s ease-out infinite alternate; }
+    @keyframes type5 { to { stroke-dashoffset: 0; } }
+    .ghost5 { stroke: #4a4456; stroke-width: 4; stroke-linecap: round; }
+    .bubble { animation: bubblein 0.7s cubic-bezier(0.22,1,0.36,1) 0.8s both; }
+    @keyframes bubblein { from { opacity: 0; transform: translateY(24px) scale(0.9); } to { opacity: 1; transform: none; } }
+    .cnt5 { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700; fill: #8af0c8; }
+    .pt { font-family: 'Inter', Arial, sans-serif; font-size: 13.5px; font-weight: 700; fill: #f5f3ef; }
+    .pd { font-family: 'Inter', Arial, sans-serif; font-size: 12px; fill: #a8a3b5; }
+    .chip5 { animation: pop5 0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
+    @keyframes pop5 { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }
+  </style>
+  <rect class="bg5" width="1200" height="300"/>
+
+  <text class="ttl5" x="60" y="56">Documents that sound like <tspan fill="url(#g5)">you.</tspan></text>
+  <text class="sub5" x="60" y="84">Built from your resume against each description. Nothing invented, gaps become questions.</text>
+
+  <!-- letter document -->
+  <g transform="translate(60, 116)">
+    <rect class="panel5" x="0" y="0" width="470" height="150" rx="12"/>
+    <text class="pt" x="22" y="34">Tailored cover letter</text>
+    <g transform="translate(22, 48)">
+      <line class="ghost5" x1="0" y1="12" x2="380" y2="12"/>
+      <line class="typed5" x1="0" y1="12" x2="380" y2="12"/>
+      <line class="ghost5" x1="0" y1="34" x2="340" y2="34"/>
+      <line class="typed5" x1="0" y1="34" x2="340" y2="34" style="animation-delay: 0.7s"/>
+      <line class="ghost5" x1="0" y1="56" x2="300" y2="56"/>
+      <line class="typed5" x1="0" y1="56" x2="300" y2="56" style="animation-delay: 1.4s"/>
+    </g>
+    <text class="sub5" x="22" y="136">copies in one click · your voice, grounded in facts</text>
+  </g>
+
+  <!-- referral bubble -->
+  <g transform="translate(600, 116)">
+    <rect class="panel5 bubble" x="0" y="0" width="540" height="96" rx="14"/>
+    <text class="pt" x="22" y="32">Referral message · <tspan fill="#8af0c8" class="cnt5" font-size="14">98</tspan> characters</text>
+    <text class="pd" x="22" y="58">"Hi, I built BankNest in Core Java and Spring Boot.</text>
+    <text class="pd" x="22" y="78">Could you refer me for this role?"</text>
+  </g>
+  <g transform="translate(600, 228)">
+    <rect class="chip5" x="0" y="0" width="170" height="30" rx="15" fill="rgba(52,211,153,0.1)" stroke="rgba(52,211,153,0.45)"/>
+    <text class="pd" x="20" y="20" fill="#8af0c8" font-weight="600">send it before cold applies</text>
+    <rect class="chip5" x="186" y="0" width="200" height="30" rx="15" fill="rgba(255,92,26,0.1)" stroke="rgba(255,92,26,0.5)" style="animation-delay: 0.3s"/>
+    <text class="pd" x="206" y="20" fill="#ffb28a" font-weight="600">refer one person per company</text>
+  </g>
+</svg>

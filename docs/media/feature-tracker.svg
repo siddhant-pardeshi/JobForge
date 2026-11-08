@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300" role="img" aria-label="Self organizing tracker">
+  <defs>
+    <linearGradient id="g6" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff5c1a"/><stop offset="0.5" stop-color="#ff2e88"/><stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="slide" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff5c1a"/><stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+  </defs>
+  <style>
+    .bg6 { fill: #0a0a14; }
+    .ttl6 { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 26px; font-weight: 700; fill: #f5f3ef; }
+    .sub6 { font-family: 'Inter', Arial, sans-serif; font-size: 14px; fill: #a8a3b5; }
+    .col { fill: rgba(255,255,255,0.03); stroke: #ffffff22; }
+    .colh { font-family: 'Inter', Arial, sans-serif; font-size: 11px; letter-spacing: 2px; fill: #8b8496; font-weight: 700; }
+    .kcard { fill: #14142a; stroke: #ffffff22; }
+    .kt { font-family: 'Inter', Arial, sans-serif; font-size: 12.5px; font-weight: 700; fill: #f5f3ef; }
+    .ks { font-family: 'Inter', Arial, sans-serif; font-size: 10.5px; fill: #8b8496; }
+    .st { font-family: 'Inter', Arial, sans-serif; font-size: 9.5px; font-weight: 700; }
+    .mover { animation: cross 6s ease-in-out infinite; }
+    @keyframes cross { 0%, 12% { transform: translate(0, 0); } 38%, 62% { transform: translate(300px, 0); } 88%, 100% { transform: translate(300px, 0); } }
+    .bell { transform-origin: 24px 24px; animation: ringk 3s ease-in-out 1s infinite; }
+    @keyframes ringk { 0%, 100% { transform: rotate(0); } 6% { transform: rotate(20deg); } 12% { transform: rotate(-16deg); } 18% { transform: rotate(10deg); } 24% { transform: rotate(0); } }
+    .arrow { stroke: url(#slide); stroke-width: 2.5; stroke-dasharray: 6 6; fill: none; opacity: 0.7; animation: dashmove 1.2s linear infinite; }
+    @keyframes dashmove { to { stroke-dashoffset: -12; } }
+  </style>
+  <rect class="bg6" width="1200" height="300"/>
+
+  <text class="ttl6" x="60" y="56">A pipeline that <tspan fill="url(#g6)">moves itself.</tspan></text>
+  <text class="sub6" x="60" y="84">Facts move the cards: packet forged, round scheduled, receipt attached. The submit click stays yours.</text>
+
+  <!-- columns -->
+  <g transform="translate(60, 108)">
+    <rect class="col" x="0" y="0" width="330" height="170" rx="12"/>
+    <text class="colh" x="18" y="26">PREPARING</text>
+    <rect class="kcard" x="14" y="38" width="300" height="58" rx="10"/>
+    <text class="kt" x="28" y="60">Java Backend Developer</text>
+    <text class="ks" x="28" y="78">PuneStack · Pune</text>
+    <rect class="col" x="360" y="0" width="330" height="170" rx="12"/>
+    <text class="colh" x="378" y="26">SUBMITTED</text>
+    <rect class="kcard" x="374" y="38" width="300" height="58" rx="10"/>
+    <text class="kt" x="388" y="60">QA Engineer</text>
+    <text class="ks" x="388" y="78">receipt pending</text>
+    <rect class="col" x="720" y="0" width="330" height="170" rx="12"/>
+    <text class="colh" x="738" y="26">INTERVIEW</text>
+    <rect class="kcard" x="734" y="38" width="300" height="58" rx="10" fill="rgba(139,92,246,0.12)" stroke="rgba(139,92,246,0.5)"/>
+    <text class="kt" x="748" y="60">Software Engineer, IAM</text>
+    <text class="ks" x="748" y="78">Rubrik · Thu 3 PM · reminder set</text>
+  </g>
+
+  <!-- animated card crossing columns -->
+  <g class="mover" transform="translate(88, 240)">
+    <rect width="280" height="46" rx="10" fill="#14142a" stroke="url(#slide)" stroke-width="1.5"/>
+    <text x="16" y="22" class="kt">Software Engineer, IAM</text>
+    <text x="16" y="38" class="ks">Rubrik · packet forged → preparing</text>
+  </g>
+  <path class="arrow" d="M 380 263 H 1180"/>
+
+  <!-- reminder bell -->
+  <g transform="translate(1120, 20)">
+    <circle cx="24" cy="24" r="24" fill="rgba(251,191,36,0.12)" stroke="rgba(251,191,36,0.5)"/>
+    <g class="bell">
+      <path d="M24 12 C30 12 33 17 33 22 L33 27 L36 31 L12 31 L15 27 L15 22 C15 17 18 12 24 12 Z" fill="#ffd884"/>
+      <circle cx="24" cy="34" r="2.5" fill="#ffd884"/>
+    </g>
+  </g>
+
+  <text class="sub6" x="60" y="286">Receipts are the only proof of submit · duplicates blocked · rounds scheduled with a reminder an hour before</text>
+</svg>

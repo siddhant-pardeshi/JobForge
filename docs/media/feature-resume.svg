@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300" role="img" aria-label="Resume engine">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff5c1a"/><stop offset="0.5" stop-color="#ff2e88"/><stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <clipPath id="lines"><rect x="66" y="66" width="150" height="150"/></clipPath>
+  </defs>
+  <style>
+    .bg { fill: #0a0a14; }
+    .panel { fill: #12121f; stroke: #ffffff22; rx: 14; }
+    .ttl { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 26px; font-weight: 700; fill: #f5f3ef; }
+    .sub { font-family: 'Inter', Arial, sans-serif; font-size: 14px; fill: #a8a3b5; }
+    .chipT { font-family: 'Inter', Arial, sans-serif; font-size: 12.5px; font-weight: 600; }
+    .docline { stroke: #5a5468; stroke-width: 5; stroke-linecap: round; }
+    .typed { stroke: #ffb28a; stroke-width: 5; stroke-linecap: round; stroke-dasharray: 160; stroke-dashoffset: 160; animation: type 2.4s ease-out infinite alternate; }
+    @keyframes type { to { stroke-dashoffset: 0; } }
+    .dot { fill: url(#g); animation: flow 2.2s linear infinite; }
+    @keyframes flow { 0% { transform: translate(0, 0); opacity: 0; } 12% { opacity: 1; } 88% { opacity: 1; } 100% { transform: translate(268px, 0); opacity: 0; } }
+    .skill { animation: pop 0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
+    @keyframes pop { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+    .conf { animation: confblink 2.4s ease-in-out infinite; }
+    @keyframes confblink { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+  </style>
+  <rect class="bg" width="1200" height="300"/>
+
+  <text class="ttl" x="60" y="56">Resume <tspan fill="url(#g)">in, profile out.</tspan></text>
+  <text class="sub" x="60" y="84">PDF, DOCX or pasted text. Parsed on your machine, corrected by you, trusted by the engine.</text>
+
+  <!-- resume document -->
+  <g transform="translate(40, 110)">
+    <rect class="panel" x="0" y="0" width="190" height="160" rx="12"/>
+    <text x="16" y="30" font-family="Space Grotesk, Arial, sans-serif" font-size="14" font-weight="700" fill="#f5f3ef">resume.pdf</text>
+    <g clip-path="url(#lines)" transform="translate(26, -52)">
+      <line class="docline" x1="0" y1="140" x2="120" y2="140"/>
+      <line class="typed" x1="0" y1="158" x2="150" y2="158"/>
+      <line class="docline" x1="0" y1="176" x2="96" y2="176"/>
+      <line class="typed" x1="0" y1="194" x2="120" y2="194" style="animation-delay: 0.6s"/>
+      <line class="docline" x1="0" y1="212" x2="132" y2="212"/>
+    </g>
+  </g>
+
+  <!-- animated flow dots -->
+  <circle class="dot" cx="250" cy="190" r="4"/>
+  <circle class="dot" cx="250" cy="190" r="4" style="animation-delay: 0.7s"/>
+  <circle class="dot" cx="250" cy="190" r="4" style="animation-delay: 1.4s"/>
+
+  <!-- profile card -->
+  <g transform="translate(540, 110)">
+    <rect class="panel" x="0" y="0" width="600" height="160" rx="12"/>
+    <text x="20" y="32" font-family="Space Grotesk, Arial, sans-serif" font-size="15" font-weight="700" fill="#f5f3ef">Siddhant Pardeshi <tspan fill="#8af0c8" font-size="12" font-weight="600">✓ verified</tspan></text>
+    <text class="sub" x="20" y="54">Java and Spring Boot developer · Pune · available immediately</text>
+    <g font-family="Inter, Arial, sans-serif">
+      <rect class="skill" x="20" y="70" width="104" height="28" rx="14" fill="rgba(255,92,26,0.12)" stroke="rgba(255,92,26,0.55)"/><text class="chipT" x="36" y="89" fill="#ffb28a">Core Java</text>
+      <rect class="skill" x="132" y="70" width="110" height="28" rx="14" fill="rgba(255,92,26,0.12)" stroke="rgba(255,92,26,0.55)" style="animation-delay: 0.25s"/><text class="chipT" x="146" y="89" fill="#ffb28a">Spring Boot</text>
+      <rect class="skill" x="250" y="70" width="72" height="28" rx="14" fill="rgba(255,92,26,0.12)" stroke="rgba(255,92,26,0.55)" style="animation-delay: 0.5s"/><text class="chipT" x="270" y="89" fill="#ffb28a">MySQL</text>
+      <rect class="skill" x="330" y="70" width="92" height="28" rx="14" fill="rgba(255,92,26,0.12)" stroke="rgba(255,92,26,0.55)" style="animation-delay: 0.75s"/><text class="chipT" x="344" y="89" fill="#ffb28a">REST APIs</text>
+      <rect class="skill" x="430" y="70" width="68" height="28" rx="14" fill="rgba(255,92,26,0.12)" stroke="rgba(255,92,26,0.55)" style="animation-delay: 1s"/><text class="chipT" x="448" y="89" fill="#ffb28a">React</text>
+      <rect class="skill" x="20" y="106" width="60" height="28" rx="14" fill="rgba(255,92,26,0.12)" stroke="rgba(255,92,26,0.55)" style="animation-delay: 1.25s"/><text class="chipT" x="38" y="125" fill="#ffb28a">AWS</text>
+      <rect class="skill" x="88" y="106" width="64" height="28" rx="14" fill="rgba(255,92,26,0.12)" stroke="rgba(255,92,26,0.55)" style="animation-delay: 1.5s"/><text class="chipT" x="102" y="125" fill="#ffb28a">Git</text>
+      <rect class="skill" x="160" y="106" width="64" height="28" rx="14" fill="rgba(255,92,26,0.12)" stroke="rgba(255,92,26,0.55)" style="animation-delay: 1.75s"/><text class="chipT" x="174" y="125" fill="#ffb28a">Maven</text>
+    </g>
+    <rect class="conf" x="250" y="106" width="180" height="28" rx="14" fill="rgba(52,211,153,0.1)" stroke="rgba(52,211,153,0.45)"/>
+    <text class="conf" x="266" y="125" font-family="Inter, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#8af0c8">✓ 24 skills · confidence chips</text>
+  </g>
+</svg>
