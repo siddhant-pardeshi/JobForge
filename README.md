@@ -149,3 +149,7 @@ Pull requests welcome, see [CONTRIBUTING.md](CONTRIBUTING.md). Found it useful? 
 ## License
 
 MIT. Built in Pune by [Siddhant Pardeshi](https://github.com/siddhant-pardeshi).
+
+<p align="center">
+  <img src="docs/media/feature-finale.svg" alt="JobForge finale" width="880"/>
+</p>

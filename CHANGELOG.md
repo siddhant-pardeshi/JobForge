@@ -2,6 +2,7 @@
 
 ## 1.4.0
 
+* Animated finale banner closes the repo page: marching gradient border, ember storm, sequential star fill and an offer accepted stamp.
 * Animated video tour at docs/media/jobforge-video-tour.mp4: 12 chapters, every feature narrated by a soft female voice, built with the reproducible pipeline in tools/video.
 * Interview prep kit in every packet: 5 to 8 questions the interviewer for this job would plausibly ask, grounded in required skills, real projects and honest gap answers. Deterministic without a key, sharper with one.
 * Skill gap report on Today: which missing must have skills recur across live relevant roles and who keeps asking, ranked by frequency.

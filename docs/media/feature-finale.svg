@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 340" width="1200" height="340" role="img" aria-label="JobForge finale">
+  <defs>
+    <linearGradient id="gf" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff5c1a"/><stop offset="0.5" stop-color="#ff2e88"/><stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="sheenF" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="wmClip"><text x="330" y="120" font-family="'Space Grotesk', Arial, sans-serif" font-size="62" font-weight="800" letter-spacing="-1">JobForge</text></clipPath>
+    <path id="starF" d="M0,-13 3.28,-4.51 12.26,-4.02 5.31,1.72 7.64,9.32 0,5.4 -7.64,9.32 -5.31,1.72 -12.26,-4.02 -3.28,-4.51 Z"/>
+  </defs>
+  <style>
+    .bg { fill: #0a0a14; }
+    .border { fill: none; stroke: url(#gf); stroke-width: 2.5; stroke-dasharray: 18 12; animation: march 1.1s linear infinite; opacity: 0.65; }
+    @keyframes march { to { stroke-dashoffset: -30; } }
+    .ember { animation: rise 6.5s linear infinite; }
+    @keyframes rise { 0% { transform: translateY(0); opacity: 0; } 10% { opacity: 0.9; } 80% { opacity: 0.5; } 100% { transform: translateY(-380px); opacity: 0; } }
+    .word { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 62px; font-weight: 800; letter-spacing: -1px; fill: url(#gf); }
+    .sheen { animation: sweepf 4s ease-in-out infinite; }
+    @keyframes sweepf { 0% { transform: translateX(-190px) skewX(-16deg); } 60%, 100% { transform: translateX(560px) skewX(-16deg); } }
+    .tag { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 24px; font-weight: 600; fill: #f5f3ef; }
+    .tag .hl { fill: url(#gf); }
+    .mono { font-family: 'JetBrains Mono', monospace; font-size: 14px; fill: #8b8496; }
+    .star { fill: #2c2a3a; transform-box: fill-box; transform-origin: center; animation: starup 3s ease-in-out infinite; animation-delay: var(--d, 0s); }
+    @keyframes starup { 0%, 20% { fill: #2c2a3a; transform: scale(1); } 32% { transform: scale(1.45); } 45%, 85% { fill: #ffd884; transform: scale(1); } 100% { fill: #2c2a3a; transform: scale(1); } }
+    .spark { stroke: #ffd884; stroke-width: 2; stroke-linecap: round; opacity: 0; animation: sparkle 3s ease-out infinite; animation-delay: 1.9s; }
+    @keyframes sparkle { 0%, 55% { opacity: 0; transform: scale(0.2); } 62% { opacity: 1; transform: scale(1.3); } 78% { opacity: 0; transform: scale(0.4); } 100% { opacity: 0; } }
+    .cta { animation: ctapulse 2.2s ease-in-out infinite; }
+    @keyframes ctapulse { 0%, 100% { opacity: 0.75; } 50% { opacity: 1; } }
+    .offer { transform-box: fill-box; transform-origin: center; animation: offerstamp 5s cubic-bezier(0.22,1,0.36,1) infinite; }
+    @keyframes offerstamp { 0%, 55% { opacity: 0; transform: scale(1.7) rotate(-16deg); } 66%, 90% { opacity: 1; transform: scale(1) rotate(-9deg); } 100% { opacity: 0; transform: scale(1) rotate(-9deg); } }
+    .ot { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 15px; font-weight: 700; }
+  </style>
+
+  <rect class="bg" width="1200" height="340"/>
+  <rect class="border" x="14" y="14" width="1172" height="312" rx="22"/>
+
+  <!-- ember storm -->
+  <circle class="ember" cx="70" cy="360" r="3.4" fill="#ff5c1a" style="animation-duration: 5.2s; animation-delay: -1s"/>
+  <circle class="ember" cx="140" cy="360" r="2.5" fill="#ff2e88" style="animation-duration: 6.4s; animation-delay: -3.2s"/>
+  <circle class="ember" cx="215" cy="360" r="3.1" fill="#8b5cf6" style="animation-duration: 5.6s; animation-delay: -2s"/>
+  <circle class="ember" cx="290" cy="360" r="2.3" fill="#ffd884" style="animation-duration: 7s;   animation-delay: -4.6s"/>
+  <circle class="ember" cx="365" cy="360" r="3.3" fill="#ff2e88" style="animation-duration: 5.9s; animation-delay: -0.4s"/>
+  <circle class="ember" cx="440" cy="360" r="2.6" fill="#ff5c1a" style="animation-duration: 6.8s; animation-delay: -5.4s"/>
+  <circle class="ember" cx="515" cy="360" r="2.2" fill="#8b5cf6" style="animation-duration: 7.4s; animation-delay: -2.8s"/>
+  <circle class="ember" cx="590" cy="360" r="3.6" fill="#ff2e88" style="animation-duration: 5.4s; animation-delay: -3.9s"/>
+  <circle class="ember" cx="665" cy="360" r="2.5" fill="#ffd884" style="animation-duration: 6.1s; animation-delay: -1.6s"/>
+  <circle class="ember" cx="740" cy="360" r="3.2" fill="#ff5c1a" style="animation-duration: 5.8s; animation-delay: -4.9s"/>
+  <circle class="ember" cx="815" cy="360" r="2.4" fill="#8b5cf6" style="animation-duration: 6.9s; animation-delay: -0.8s"/>
+  <circle class="ember" cx="890" cy="360" r="3.4" fill="#ff2e88" style="animation-duration: 5.5s; animation-delay: -6.2s"/>
+  <circle class="ember" cx="965" cy="360" r="2.6" fill="#ffd884" style="animation-duration: 7.2s; animation-delay: -2.4s"/>
+  <circle class="ember" cx="1040" cy="360" r="3.3" fill="#ff5c1a" style="animation-duration: 5.7s; animation-delay: -5.1s"/>
+  <circle class="ember" cx="1115" cy="360" r="2.5" fill="#8b5cf6" style="animation-duration: 6.6s; animation-delay: -1.1s"/>
+  <circle class="ember" cx="1175" cy="360" r="3.1" fill="#ff2e88" style="animation-duration: 6.3s; animation-delay: -3.6s"/>
+  <circle class="ember" cx="35" cy="360" r="2.2" fill="#8b5cf6" style="animation-duration: 7.8s; animation-delay: -5.8s"/>
+  <circle class="ember" cx="480" cy="360" r="2.1" fill="#ffd884" style="animation-duration: 8.4s; animation-delay: -7.1s"/>
+  <circle class="ember" cx="940" cy="360" r="2.1" fill="#ff8a3d" style="animation-duration: 8.9s; animation-delay: -0.2s"/>
+  <circle class="ember" cx="1200" cy="360" r="2.4" fill="#ff5c1a" style="animation-duration: 6s;   animation-delay: -4.2s"/>
+
+  <!-- brand -->
+  <g transform="translate(96, 66)">
+    <rect x="0" y="0" width="58" height="58" rx="17" fill="url(#gf)"/>
+    <path d="M29 11 C37 20 44 24 44 32.5 C44 39 38.5 42.5 29 42.5 C19.5 42.5 14 39 14 32.5 C14 25 22.5 21.5 24.5 15.5 C26 21 30 21.5 29 11 Z" fill="#0a0a14"/>
+  </g>
+
+  <!-- wordmark with sheen -->
+  <text class="word" x="190" y="120">JobForge</text>
+  <g clip-path="url(#wmClip)"><rect class="sheen" x="220" y="55" width="100" height="90" fill="url(#sheenF)"/></g>
+  <text class="tag" x="196" y="164">Forge your applications. <tspan class="hl">Land the role.</tspan></text>
+
+  <!-- star row: fills in sequence, sparkles on the last -->
+  <g transform="translate(196, 196)">
+    <g transform="translate(0, 0)"><use href="#starF" class="star" style="--d: 0s"/></g>
+    <g transform="translate(40, 0)"><use href="#starF" class="star" style="--d: 0.35s"/></g>
+    <g transform="translate(80, 0)"><use href="#starF" class="star" style="--d: 0.7s"/></g>
+    <g transform="translate(120, 0)"><use href="#starF" class="star" style="--d: 1.05s"/></g>
+    <g transform="translate(160, 0)"><use href="#starF" class="star" style="--d: 1.4s"/></g>
+    <g transform="translate(160, 0)">
+      <line class="spark" x1="-20" y1="0" x2="-9" y2="0"/>
+      <line class="spark" x1="9" y1="-8" x2="16" y2="-15"/>
+      <line class="spark" x1="10" y1="9" x2="17" y2="14"/>
+    </g>
+    <text class="mono" x="210" y="6" fill="#a8a3b5">stars help other engineers find JobForge</text>
+  </g>
+
+  <!-- CTA line -->
+  <g class="cta" transform="translate(196, 232)">
+    <rect x="0" y="0" width="470" height="40" rx="20" fill="rgba(255,92,26,0.1)" stroke="url(#gf)" stroke-width="1.5"/>
+    <text x="22" y="26" font-family="JetBrains Mono, monospace" font-size="14.5" font-weight="600" fill="#ffd9c2">github.com/siddhant-pardeshi/JobForge</text>
+  </g>
+  <text class="mono" x="196" y="300" >MIT · free forever · your data stays on your machine</text>
+
+  <!-- offer accepted stamp -->
+  <g transform="translate(920, 150)">
+    <g class="offer">
+      <rect x="0" y="0" width="230" height="56" rx="10" fill="rgba(52,211,153,0.12)" stroke="rgba(52,211,153,0.6)"/>
+      <text class="ot" x="20" y="26" fill="#8af0c8">OFFER</text>
+      <text class="ot" x="20" y="46" fill="#8af0c8" font-size="12" font-weight="600">accepted ✓ receipt attached</text>
+    </g>
+  </g>
+
+  <!-- built in pune -->
+  <text class="mono" x="60" y="316" style="opacity: 0.85">built in Pune · by Siddhant Pardeshi</text>
+</svg>
