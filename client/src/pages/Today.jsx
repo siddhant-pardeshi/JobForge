@@ -14,6 +14,8 @@ export default function Today() {
   const [apps, setApps] = useState([]);
   const [health, setHealth] = useState(null);
   const [agenda, setAgenda] = useState([]);
+  const [gaps, setGaps] = useState(null);
+  const [insights, setInsights] = useState(null);
   const navigate = useNavigate();
   const notifiedRef = useRef(new Set(JSON.parse(localStorage.getItem('jf_notified') || '[]')));
 
@@ -22,6 +24,8 @@ export default function Today() {
     api('/applications').then((r) => setApps(r.applications)).catch(() => {});
     api('/sources/health').then(setHealth).catch(() => {});
     api('/agenda').then((r) => setAgenda(r.items)).catch(() => {});
+    api('/gaps').then((r) => setGaps(r.gaps)).catch(() => {});
+    api('/insights').then((r) => setInsights(r.insights)).catch(() => {});
   }, []);
 
   // Browser reminders: one hour before every scheduled round, once each.
@@ -188,6 +192,39 @@ export default function Today() {
             </Reveal>
 
             <Reveal delay={0.3}>
+              <div className="card" style={{ height: '100%' }}>
+                <SectionHead kicker="Learn what the market asks" title="Skill gaps to close" />
+                {gaps && gaps.length ? gaps.slice(0, 6).map((g) => (
+                  <div key={g.skill} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: '7px 0', borderBottom: '1px dashed rgba(255,255,255,0.06)' }}>
+                    <div style={{ minWidth: 0 }}>
+                      <strong style={{ fontSize: 12.5 }}>{g.skill}</strong>
+                      <div style={{ fontSize: 10.5, color: 'var(--faint)' }}>{g.companyCount} compan{g.companyCount === 1 ? 'y' : 'ies'} asking: {g.companies.join(', ')}</div>
+                    </div>
+                    <Chip tone={g.count >= 5 ? 'red' : g.count >= 3 ? 'amber' : 'cyan'}>{g.count} roles</Chip>
+                  </div>
+                )) : <p style={{ color: 'var(--faint)', fontSize: 12.5 }}>No recurring gaps. Your resume covers what the live boards ask for, or too few roles state requirements yet.</p>}
+                <p style={{ fontSize: 10.5, color: 'var(--faint)', marginTop: 8 }}>Counted from must-have skills in live, relevant postings. The top item is your highest leverage study this week.</p>
+              </div>
+            </Reveal>
+
+            <Reveal delay={0.35}>
+              <div className="card" style={{ height: '100%' }}>
+                <SectionHead kicker="Real listings only" title="What the market is paying" />
+                {insights && insights.listed > 0 ? (
+                  <>
+                    <p style={{ fontSize: 11.5, color: 'var(--faint)', marginBottom: 8 }}>{insights.listed} of {insights.total} live roles list pay ({insights.listedPct} percent). Median band per lane:</p>
+                    {insights.rows.slice(0, 5).map((r) => (
+                      <div key={r.lane + r.currency} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 0', borderBottom: '1px dashed rgba(255,255,255,0.06)' }}>
+                        <span style={{ fontSize: 12, textTransform: 'capitalize' }}>{LANE_META[r.lane]?.label || 'Other lanes'} <span style={{ color: 'var(--faint)' }}>· {r.currency}</span></span>
+                        <span className="mono" style={{ fontSize: 11.5, color: '#ffb28a' }}>{r.median} <span style={{ color: 'var(--faint)' }}>({r.sample})</span></span>
+                      </div>
+                    ))}
+                  </>
+                ) : <p style={{ color: 'var(--faint)', fontSize: 12.5 }}>Too few live roles state pay yet. This fills in as boards refresh.</p>}
+              </div>
+            </Reveal>
+
+            <Reveal delay={0.4}>
               <div className="card" style={{ height: '100%' }}>
                 <SectionHead kicker="Plumbing" title="Source health" />
                 {health && health.summary.total > 0 ? (

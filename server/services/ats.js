@@ -46,17 +46,53 @@ function stripHtml(html) {
     .trim();
 }
 
-function salaryFromText(text) {
-  const t = String(text || '');
-  const lakh = t.match(/₹?\s*(\d{1,2}(?:\.\d)?)\s*(?:-|to|–)\s*(\d{1,2}(?:\.\d)?)\s*(?:LPA|lakh|lakhs)/i);
-  if (lakh) return { known: true, minLPA: Number(lakh[1]), maxLPA: Number(lakh[2]) };
+export function salaryFromText(text) {
+  // Decode HTML entities the description stripper leaves behind (mdash is
+  // how boards write their pay range dashes) and normalize every dash style
+  // to a plain hyphen so one pattern set covers all boards.
+  const t = String(text || '')
+    .replace(/&mdash;/gi, '-')
+    .replace(/&ndash;/gi, '-')
+    .replace(/[—–]/g, '-')
+    .replace(/&#8377;|&#x20B9;/gi, '₹')
+    .replace(/&euro;/gi, '€')
+    .replace(/&pound;/gi, '£')
+    .replace(/&amp;/gi, '&');
+  // Indian formats first: LPA, lakh and monthly rupee bands. The second
+  // number may repeat its rupee symbol after the dash.
+  const lakh = t.match(/₹?\s*(\d{1,2}(?:\.\d)?)\s*(?:-|to)\s*(?:₹|Rs\.?)?\s*(\d{1,2}(?:\.\d)?)\s*(?:LPA|lakh|lakhs)/i);
+  if (lakh) return { known: true, minLPA: Number(lakh[1]), maxLPA: Number(lakh[2]), currency: 'INR' };
   const single = t.match(/₹?\s*(\d{1,2}(?:\.\d)?)\s*(?:LPA|lakh)/i);
-  if (single) return { known: true, minLPA: null, maxLPA: Number(single[1]) };
-  const monthly = t.match(/₹?\s*(\d{2,3})[,.]?(\d{3})\s*(?:-|to|–)?\s*(\d{2,3})?[,.]?(\d{3})?\s*(?:per month|\/month|k\/m)/i);
+  if (single) return { known: true, minLPA: null, maxLPA: Number(single[1]), currency: 'INR' };
+  const monthly = t.match(/₹?\s*(\d{2,3})[,.]?(\d{3})\s*(?:-|to)?\s*(?:₹|Rs\.?)?\s*(\d{2,3})?[,.]?(\d{3})?\s*(?:per month|\/month|k\/m)/i);
   if (monthly) {
     const lo = Number(monthly[1]) * 1000 + Number(monthly[2] || 0);
     const hi = monthly[3] ? Number(monthly[3]) * 1000 + Number(monthly[4] || 0) : lo;
-    return { known: true, minLPA: Math.round((lo * 12) / 100000 * 10) / 10, maxLPA: Math.round((hi * 12) / 100000 * 10) / 10 };
+    return { known: true, minLPA: Math.round((lo * 12) / 100000 * 10) / 10, maxLPA: Math.round((hi * 12) / 100000 * 10) / 10, currency: 'INR' };
+  }
+  // International annual bands: "$150,000 USD - $220,000 USD annually",
+  // "$150k - $220k", "€70.000 per year". Currency words are normalized to
+  // symbols first so one clean pattern covers every ordering, and thousands
+  // separators are stripped whether the locale used a comma or a dot. Bands
+  // stay in native currency for display; LPA medians only ever use INR so no
+  // exchange rate is ever invented.
+  const normalized = t.replace(/\bUSD\b/gi, '$').replace(/\bEUR\b/gi, '€').replace(/\bGBP\b/gi, '£');
+  const stripSep = (v) => String(v).replace(/[.,](?=\d{3}(\D|$))/g, '');
+  const symFor = { $: '$', '€': '€', '£': '£' };
+  const pair = normalized.match(/([$€£])\s?(\d{2,3}(?:[.,]\d{3})*)(k)?(?:\s*[$€£])?\s*(?:-|to|–)\s*([$€£])?\s?(\d{2,3}(?:[.,]\d{3})*)(k)?/i);
+  if (pair) {
+    const cur = symFor[pair[1]] ? pair[1] : '$';
+    const code = { '$': 'USD', '€': 'EUR', '£': 'GBP' }[cur];
+    const lo = Number(stripSep(pair[2])) * (pair[3] ? 1000 : 1);
+    const hi = pair[5] ? Number(stripSep(pair[5])) * (pair[6] ? 1000 : 1) : lo;
+    return { known: true, minLPA: null, maxLPA: null, currency: code, native: `${symFor[cur]}${Math.round(lo / 1000)}k${hi !== lo ? ` to ${symFor[cur]}${Math.round(hi / 1000)}k` : ''}` };
+  }
+  const singleIntl = normalized.match(/([$€£])\s?(\d{2,3}(?:[.,]\d{3})*)(k)?\s*(?:a year|per year|annually|base)/i);
+  if (singleIntl) {
+    const cur = symFor[singleIntl[1]] ? singleIntl[1] : '$';
+    const code = { '$': 'USD', '€': 'EUR', '£': 'GBP' }[cur];
+    const n = Number(stripSep(singleIntl[2])) * (singleIntl[3] ? 1000 : 1);
+    return { known: true, minLPA: null, maxLPA: null, currency: code, native: `${symFor[cur]}${n.toLocaleString('en-US')}` };
   }
   return { known: false, minLPA: null, maxLPA: null };
 }

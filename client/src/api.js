@@ -31,6 +31,7 @@ export function inr(value) {
 
 export function lpa(salary) {
   if (!salary?.known) return null;
+  if (salary.currency && salary.currency !== 'INR') return salary.native || `Pay listed (${salary.currency})`;
   if (salary.minLPA && salary.maxLPA) return `₹${salary.minLPA} to ${salary.maxLPA} LPA`;
   if (salary.maxLPA) return `up to ₹${salary.maxLPA} LPA`;
   return 'Pay listed, band unclear';

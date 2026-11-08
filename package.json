@@ -1,6 +1,6 @@
 {
   "name": "jobforge",
-  "version": "1.0.0",
+  "version": "1.4.0",
   "private": true,
   "type": "module",
   "description": "AI powered job hunt cockpit that finds verified tech roles, scores every opening with explainable matching, screens recruitment scams and tracks every application",

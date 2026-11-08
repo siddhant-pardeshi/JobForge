@@ -3,7 +3,7 @@ import compression from 'compression';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import routes, { warmScores } from './routes.js';
+import routes, { warmScores, backfillSalaries } from './routes.js';
 import { bootstrap, load, save } from './store.js';
 import { fetchAllSources } from './services/refresh.js';
 import { gateAllowed, gateHash, isAdminReq } from './services/access.js';
@@ -12,6 +12,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 
 bootstrap();
+backfillSalaries();
 
 app.use(compression());
 app.use(express.json({ limit: '3mb' }));

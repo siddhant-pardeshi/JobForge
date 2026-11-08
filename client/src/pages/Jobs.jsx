@@ -310,6 +310,16 @@ function JobDetail({ detail, packet, packetBusy, onPacket, onFeedback, onClose }
             </p>
           </div>
 
+          {packet.prep?.length > 0 && (
+            <div style={{ marginTop: 14 }}>
+              <strong style={{ fontSize: 12.5, display: 'flex', gap: 6, alignItems: 'center' }}>Interview prep kit <Chip tone="violet">practice aloud</Chip></strong>
+              <ul style={{ margin: '8px 0 0', paddingLeft: 18, fontSize: 12.5, color: 'var(--muted)', display: 'grid', gap: 5 }}>
+                {packet.prep.map((q, i) => <li key={i}>{q}</li>)}
+              </ul>
+              <p style={{ fontSize: 10.5, color: 'var(--faint)', marginTop: 6 }}>Grounded in this description and your resume. If a question touches a gap, prepare an honest answer or a fast learning plan.</p>
+            </div>
+          )}
+
           {packet.bulletSuggestions?.length > 0 && (
             <>
               <div className="divider" />

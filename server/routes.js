@@ -7,9 +7,10 @@ import { load, save, id, bootstrap, resumeDir, DATA_DIR, DEFAULT_SETTINGS, DEFAU
 import { extractText, draftProfile } from './services/parser.js';
 import { scoreJob, mergeDuplicates, parseExperience, classify } from './services/scoring.js';
 import { analyzeScam, analyzeEmail } from './services/scam.js';
-import { fetchFromProvider, verifyBoard, ATS_PROVIDERS } from './services/ats.js';
+import { fetchFromProvider, verifyBoard, ATS_PROVIDERS, salaryFromText } from './services/ats.js';
 import { PRESETS, llmStatus, testProvider } from './services/llm.js';
 import { buildPacket, booleanStrings } from './services/tailoring.js';
+import { aggregateGaps, salaryInsights } from './services/insights.js';
 import { evaluateOffer, DEFAULT_BUDGETS, BUDGET_CATEGORIES } from './services/relocation.js';
 import { isAdminReq } from './services/access.js';
 import { fetchAllSources, runSource } from './services/refresh.js';
@@ -108,6 +109,29 @@ function warmScores() {
   try { scoreAll(getProfile()); } catch { /* warming is best effort */ }
 }
 
+// One time: re-run pay detection over stored postings that never had a
+// salary parsed. Parser improvements only help existing data if we backfill.
+let salariesBackfilled = false;
+function backfillSalaries() {
+  if (salariesBackfilled) return;
+  salariesBackfilled = true;
+  const jobs = load('jobs') || [];
+  let fixed = 0;
+  for (const job of jobs) {
+    if (job.salary?.known) continue;
+    const parsed = salaryFromText(job.description || '');
+    if (parsed.known) {
+      job.salary = parsed;
+      fixed++;
+    }
+  }
+  if (fixed > 0) {
+    save('jobs', jobs);
+    scoreCache.clear();
+    console.log(`[jobforge] backfilled pay for ${fixed} stored postings`);
+  }
+}
+
 // ---- bootstrap ----
 router.get('/bootstrap', ah(async (req, res) => {
   const settings = getSettings();
@@ -179,6 +203,21 @@ router.get('/jobs/:id', ah(async (req, res) => {
   const job = scoreAll(profile).find((j) => j.id === req.params.id);
   if (!job) return res.status(404).json({ error: 'That job is not in your pipeline anymore' });
   res.json({ job, booleanStrings: booleanStrings(profile || {}) });
+}));
+
+// Skill market gaps: which missing must have skills recur across live
+// relevant roles, and who is asking. Deterministic, real postings only.
+router.get('/gaps', ah(async (req, res) => {
+  const profile = getProfile();
+  const jobs = scoreAll(profile);
+  res.json({ ok: true, gaps: aggregateGaps(jobs) });
+}));
+
+// Listed pay bands by lane from postings that state a salary. Sample sizes
+// travel with every number so the UI stays honest about coverage.
+router.get('/insights', ah(async (req, res) => {
+  const profile = getProfile();
+  res.json({ ok: true, insights: salaryInsights(scoreAll(profile)) });
 }));
 
 router.post('/jobs/import', ah(async (req, res) => {
@@ -564,6 +603,26 @@ router.get('/applications', ah(async (req, res) => {
   res.json({ applications: load('applications') || [], transitions: TRANSITIONS });
 }));
 
+// Spreadsheet friendly export of every tracked application and its rounds.
+router.get('/applications/export.csv', ah(async (req, res) => {
+  const apps = load('applications') || [];
+  const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const rows = [['Role', 'Company', 'City', 'State', 'Created', 'Updated', 'Receipt', 'Rounds', 'Next round', 'Notes']];
+  for (const app of apps) {
+    const events = (app.events || []).slice().sort((a, b) => new Date(a.at) - new Date(b.at));
+    const next = events.find((e) => new Date(e.at).getTime() >= Date.now());
+    rows.push([
+      app.jobSnapshot?.title, app.jobSnapshot?.company, app.jobSnapshot?.city, app.state,
+      app.createdAt, app.updatedAt, app.receipt?.reference || '', events.length,
+      next ? `${next.label} ${next.at}` : '', app.history?.filter((h) => h.note).map((h) => h.note).join(' | ')
+    ]);
+  }
+  const csv = rows.map((r) => r.map(esc).join(',')).join('\r\n');
+  res.setHeader('content-type', 'text/csv; charset=utf-8');
+  res.setHeader('content-disposition', `attachment; filename="jobforge-applications-${Date.now()}.csv"`);
+  res.send(csv);
+}));
+
 router.post('/applications', ah(async (req, res) => {
   const jobId = req.body?.jobId;
   const job = assembleJobs().find((j) => j.id === jobId);
@@ -821,4 +880,4 @@ router.post('/reset', ah(async (req, res) => {
 }));
 
 export default router;
-export { warmScores };
+export { warmScores, backfillSalaries };

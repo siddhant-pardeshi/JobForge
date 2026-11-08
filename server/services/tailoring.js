@@ -4,6 +4,7 @@
 
 import { chat, extractJson, llmStatus } from './llm.js';
 import { canonicalSkills } from '../taxonomy.js';
+import { buildPrep } from './insights.js';
 
 const TRUTH_RULES = `You tailor application documents for a job seeker.
 HARD RULES:
@@ -16,6 +17,7 @@ Return a single JSON object with keys:
 - bullets (array of strings, each grounded in resume facts),
 - coverLetter (string, 140 to 180 words, professional warm tone, explicitly connect two or three stated job requirements to real things in the resume, end with a confident closing line),
 - referralMessage (string, 90 to 115 characters including spaces, a polite WhatsApp or LinkedIn note asking an employee for a referral to this specific role, mention one concrete resume fact and the role title, no greetings longer than one word, no fabricated familiarity),
+- prep (array of 5 to 8 interview questions the interviewer for THIS job would plausibly ask, each grounded in a required skill from the description or a real resume project, phrased for the candidate to practice aloud),
 - questions (array of strings).`;
 
 export async function buildPacket({ job, profile, settings, match }) {
@@ -37,6 +39,8 @@ export async function buildPacket({ job, profile, settings, match }) {
     summarySuggestion: null,
     bulletSuggestions: [],
     referralMessage: null,
+    referralChars: 0,
+    prep: [],
     questions: [],
     gaps: (match?.missing || []).map((m) => `The description asks for ${m.name} which your resume does not show. Decide whether a genuine example exists or leave the gap visible`),
     answers: [],
@@ -65,6 +69,10 @@ export async function buildPacket({ job, profile, settings, match }) {
   packet.referralMessage = variants.find((v) => v.length <= 118) || variants[variants.length - 1];
   packet.referralChars = packet.referralMessage.length;
 
+  // Interview prep grounded in the description and the resume. Deterministic
+  // by default; an AI answer only replaces it if it passes the shape check.
+  packet.prep = buildPrep(job, profile, match);
+
   if (llm.ready) {
     try {
       const raw = await chat(settings, {
@@ -81,6 +89,9 @@ export async function buildPacket({ job, profile, settings, match }) {
         if (typeof parsed.referralMessage === 'string' && parsed.referralMessage.length <= 140) {
           packet.referralMessage = parsed.referralMessage;
           packet.referralChars = parsed.referralMessage.length;
+        }
+        if (Array.isArray(parsed.prep) && parsed.prep.length >= 3) {
+          packet.prep = parsed.prep.filter((q) => typeof q === 'string' && q.length > 12).slice(0, 8);
         }
         packet.questions = [...new Set([...(parsed.questions || []), ...packet.questions])].slice(0, 8);
       }

@@ -4,6 +4,7 @@
 // because boards sometimes omit a posting transiently.
 
 import { fetchFromProvider } from './ats.js';
+import { salaryFromText } from './ats.js';
 import { load, save } from '../store.js';
 import { analyzeScam } from './scam.js';
 
@@ -30,11 +31,15 @@ export function applyFetchToStore(company, fetchedJobs) {
   let reopenedCount = 0;
 
   // Existing jobs: refresh what is still live, close what vanished twice.
+  // Salary is refreshed too, so parser improvements reach stored postings.
+  const fetchedById = new Map(fetchedJobs.map((f) => [f.externalId, f]));
   for (const job of refreshed) {
     const idx = jobs.findIndex((j) => j.id === job.id);
     if (idx === -1) continue;
     jobs[idx].lastSeen = now;
     jobs[idx].missCount = 0;
+    const fresh = fetchedById.get(job.externalId);
+    if (fresh?.salary?.known && !jobs[idx].salary?.known) jobs[idx].salary = fresh.salary;
     if (jobs[idx].status === 'closed') {
       jobs[idx].status = 'open';
       jobs[idx].closedAt = null;

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.0
+
+* Interview prep kit in every packet: 5 to 8 questions the interviewer for this job would plausibly ask, grounded in required skills, real projects and honest gap answers. Deterministic without a key, sharper with one.
+* Skill gap report on Today: which missing must have skills recur across live relevant roles and who keeps asking, ranked by frequency.
+* Market pay insight on Today: median listed bands by lane and currency from postings that state a salary, sample sizes included, no estimates. International bands stay in their native currency, so no exchange rate is ever fabricated.
+* Salary detection overhauled for real board formats: em dash entities, USD, EUR and GBP annual bands, European thousands separators. Stored postings backfill at startup and refresh.
+* Applications CSV export for spreadsheets.
+* Chrome helper reliability pass: all cockpit requests route through the background worker, debounced injection, orphan detection after extension reloads.
+
 ## 1.3.0
 
 * Access switch in Settings: open the cockpit to everyone or make it private with a six digit code, flippable instantly. Free access is now the default in public mode.

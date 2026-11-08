@@ -276,6 +276,7 @@ export default function SettingsPage() {
           </p>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <a className="btn sm" href="/api/export" download><Download size={13} /> Export everything as JSON</a>
+            <a className="btn sm" href="/api/applications/export.csv" download><Download size={13} /> Applications as CSV</a>
             <button className="btn danger sm" onClick={async () => {
               if (!confirm('This wipes profile, jobs, tracker history, scam log, and settings on this machine. Resume files too. Continue?')) return;
               setBusy(true);
