@@ -12,6 +12,7 @@
   <a href="docs/media/jobforge-video-tour.mp4"><img src="https://img.shields.io/badge/video%20tour-5%20min%20animated-ff5c1a?style=for-the-badge&labelColor=0b0b15&logo=youtube&logoColor=white" alt="video tour"/></a>
   <a href="docs/media/jobforge-walkthrough.wav"><img src="https://img.shields.io/badge/voice%20walkthrough-8%20min-22d3ee?style=for-the-badge&labelColor=0b0b15" alt="voice walkthrough"/></a>
   <a href="docs/media/JobForge-Guide.pdf"><img src="https://img.shields.io/badge/READ%20THE%20FIELD%20GUIDE-16%20page%20PDF-ff5c1a?style=for-the-badge&labelColor=0b0b15&logo=adobeacrobatreader&logoColor=white" alt="JobForge Field Guide PDF"/></a>
+  <a href="docs/media/JobForge-Presentation.pptx"><img src="https://img.shields.io/badge/FEATURE%20DECK-15%20slides-violet?style=for-the-badge&labelColor=0b0b15&logo=microsoftpowerpoint&logoColor=white" alt="JobForge presentation deck"/></a>
 </p>
 
 <p align="center">
@@ -29,7 +30,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173, drop in your resume, done. Prefer the single process version? `npm run build && npm start` and use http://localhost:8787. New here? Read **[the 16 page Field Guide PDF](docs/media/JobForge-Guide.pdf)** or watch **[the animated video tour](docs/media/jobforge-video-tour.mp4)**.
+Open http://localhost:5173, drop in your resume, done. Prefer the single process version? `npm run build && npm start` and use http://localhost:8787. New here? Read **[the 16 page Field Guide PDF](docs/media/JobForge-Guide.pdf)**, watch **[the animated video tour](docs/media/jobforge-video-tour.mp4)**, or present it yourself with **[the 15 slide feature deck](docs/media/JobForge-Presentation.pptx)**.
 
 ## How a posting becomes an application
 

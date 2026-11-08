@@ -2,6 +2,7 @@
 
 ## 1.4.0
 
+* Feature presentation deck at docs/media/JobForge-Presentation.pptx: 15 dark themed slides covering every feature, the architecture, the AI key wiring and the daily routine.
 * Animated finale banner closes the repo page: marching gradient border, ember storm, sequential star fill and an offer accepted stamp.
 * Animated video tour at docs/media/jobforge-video-tour.mp4: 12 chapters, every feature narrated by a soft female voice, built with the reproducible pipeline in tools/video.
 * Interview prep kit in every packet: 5 to 8 questions the interviewer for this job would plausibly ask, grounded in required skills, real projects and honest gap answers. Deterministic without a key, sharper with one.

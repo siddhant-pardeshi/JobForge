@@ -23,6 +23,7 @@ State of every capability as of the real data release, 25 October 2026. The cate
 * Application rounds and reminders: per application events with date, time, mode, and notes; a Today radar with countdowns; browser notifications one hour before each round.
 * Self organizing tracker: forging a packet auto creates or advances the application to preparing, scheduling a round promotes the card to interview, receipts make submissions count, and the board re-renders every change live on a five second cycle with animated transitions.
 * Animated video tour at docs/media/jobforge-video-tour.mp4: 12 chapters covering every feature, narrated by a soft female voice, reproducible from tools/video.
+* Feature presentation deck at docs/media/JobForge-Presentation.pptx: 15 dark themed slides covering every feature, the architecture, AI key wiring and the daily routine.
 * Market intelligence: skill gap aggregation across live relevant roles, and listed pay medians by lane and currency with honest sample sizes. Covered by tests.
 * Interview prep kit: 5 to 8 grounded questions per packet, deterministic or AI phrased. Covered by tests.
 * Applications CSV export alongside the full JSON export.
