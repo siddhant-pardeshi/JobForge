@@ -10,6 +10,7 @@
   <img src="https://img.shields.io/badge/tests-30%20passing-34d399?style=for-the-badge&labelColor=0b0b15" alt="tests"/>
   <img src="https://img.shields.io/badge/node-20%2B-8b5cf6?style=for-the-badge&labelColor=0b0b15&logo=nodedotjs&logoColor=white" alt="node 20 or newer"/>
   <a href="docs/media/jobforge-walkthrough.wav"><img src="https://img.shields.io/badge/voice%20walkthrough-8%20min-22d3ee?style=for-the-badge&labelColor=0b0b15" alt="voice walkthrough"/></a>
+  <a href="docs/media/jobforge-video-tour.mp4"><img src="https://img.shields.io/badge/video%20tour-5%20min%20animated-ff5c1a?style=for-the-badge&labelColor=0b0b15&logo=youtube&logoColor=white" alt="video tour"/></a>
   <a href="extension/README.md"><img src="https://img.shields.io/badge/Chrome%20helper-capture%20%2B%20autofill-fbbf24?style=for-the-badge&labelColor=0b0b15&logo=googlechrome&logoColor=white" alt="Chrome helper"/></a>
 </p>
 
@@ -51,6 +52,8 @@ Open http://localhost:5173, drop in your resume, done. Want the single process v
 **A tracker that does the dragging for you.** Forge a packet, the card moves to Preparing. Schedule a round, it moves to Interview and shows up on your Today radar with a countdown and a browser reminder an hour before. Attach the receipt, the submission finally counts. The board refreshes itself every five seconds.
 
 ## The Chrome helper
+
+New here? Watch **[docs/media/jobforge-video-tour.mp4](docs/media/jobforge-video-tour.mp4)** first: a five minute animated video tour narrated by a soft female voice, covering every feature, the AI key wiring and the daily routine. The in app guided tour narrates the same steps aloud, the audio only version lives at [docs/media/jobforge-walkthrough.wav](docs/media/jobforge-walkthrough.wav), and the script is in [docs/WALKTHROUGH.md](docs/WALKTHROUGH.md).
 
 The extension in `extension/` pairs with your cockpit in two minutes and works on LinkedIn, Naukri, Greenhouse, Lever, Ashby, SmartRecruiters, Workday, plus Gmail and Outlook:
 
@@ -100,7 +103,8 @@ server/     Express API, scoring, board refresh, fraud engine, access control
 client/     React 19, Vite, Tailwind 4, Framer Motion
 extension/  Chrome MV3 helper
 test/       30 tests, npm test
-docs/       guides, walkthrough audio, capability matrix
+docs/       guides, video tour, walkthrough audio, capability matrix
+tools/      video and audio generation scripts
 ```
 
 30 tests cover the guarantees that matter: sales roles at software companies stay excluded, engineering roles at banks get matched, Pune beats equal relocation offers, fee demands block automation, closed detection needs two misses, duplicates merge with provenance.

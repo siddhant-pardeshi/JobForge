@@ -18,3 +18,9 @@ Thumbs.db
 
 # private working brief, not part of the project
 ZAI_TECH_JOB_ASSISTANT_SUPER_PROMPT.txt
+
+# video build intermediates (regenerable via tools/video)
+tools/video/raw/
+tools/video/wav/
+tools/video/out/
+tools/video/node_modules/

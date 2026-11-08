@@ -22,7 +22,8 @@ State of every capability as of the real data release, 25 October 2026. The cate
 * Scam screening: 18 body indicators plus 5 email envelope checks (reply to mismatch, sender domain against the claimed employer, link text versus real destination, shorteners, urgent money combinations), severity bands, blocking rules, private log. One click screening of the open email inside Gmail and Outlook through the helper.
 * Application rounds and reminders: per application events with date, time, mode, and notes; a Today radar with countdowns; browser notifications one hour before each round.
 * Self organizing tracker: forging a packet auto creates or advances the application to preparing, scheduling a round promotes the card to interview, receipts make submissions count, and the board re-renders every change live on a five second cycle with animated transitions.
-* Market intelligence: skill gap aggregation across live relevant roles, and listed pay medians by lane with honest sample sizes. Covered by tests.
+* Animated video tour at docs/media/jobforge-video-tour.mp4: 12 chapters covering every feature, narrated by a soft female voice, reproducible from tools/video.
+* Market intelligence: skill gap aggregation across live relevant roles, and listed pay medians by lane and currency with honest sample sizes. Covered by tests.
 * Interview prep kit: 5 to 8 grounded questions per packet, deterministic or AI phrased. Covered by tests.
 * Applications CSV export alongside the full JSON export.
 * Public mode with a live access switch: open to everyone or private with a six digit code, flippable instantly from Settings by the owner on the host machine or remotely with the admin code. Ordinary visitors can never flip it, and secrets never travel to guests. Covered by automated tests.

@@ -2,6 +2,7 @@
 
 ## 1.4.0
 
+* Animated video tour at docs/media/jobforge-video-tour.mp4: 12 chapters, every feature narrated by a soft female voice, built with the reproducible pipeline in tools/video.
 * Interview prep kit in every packet: 5 to 8 questions the interviewer for this job would plausibly ask, grounded in required skills, real projects and honest gap answers. Deterministic without a key, sharper with one.
 * Skill gap report on Today: which missing must have skills recur across live relevant roles and who keeps asking, ranked by frequency.
 * Market pay insight on Today: median listed bands by lane and currency from postings that state a salary, sample sizes included, no estimates. International bands stay in their native currency, so no exchange rate is ever fabricated.
