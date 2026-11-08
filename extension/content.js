@@ -9,6 +9,33 @@
 
 const SERVER = () => 'http://localhost:8787';
 
+// All cockpit requests go through the background worker. Content scripts live
+// inside https pages, and Chrome's local network rules plus page CSP can
+// block their direct calls to http://localhost; the worker holds the host
+// permission instead. If the extension was reloaded since this page loaded,
+// sendMessage throws "Extension context invalidated": detect that and tell
+// the user to refresh instead of failing silently.
+function bgFetch(path, options = {}) {
+  return new Promise((resolve) => {
+    try {
+      chrome.runtime.sendMessage(
+        { type: 'jf-fetch', url: `${SERVER()}${path}`, options },
+        (res) => {
+          void chrome.runtime.lastError;
+          resolve(res || { ok: false, status: 0, error: 'background-unreachable' });
+        }
+      );
+    } catch (err) {
+      const orphaned = /context invalidated|reloaded/i.test(String(err && err.message));
+      resolve({
+        ok: false, status: 0,
+        orphaned,
+        error: orphaned ? 'The helper was reloaded. Refresh this page to reconnect.' : String(err && err.message || err)
+      });
+    }
+  });
+}
+
 let token = null;
 chrome.storage.local.get(['token'], (r) => { token = r.token || null; maybeInject(); });
 
@@ -171,13 +198,46 @@ function say(text, ms = 3800) {
 }
 
 function maybeInject() {
+  if (isMailSite()) return maybeInjectMail();
   const job = currentJob();
   const formLikely = document.querySelector('form input, form textarea');
   mountUI();
   const btn = document.querySelector(`#${UI_ID} button:not(.secondary)`);
   const fillBtn = document.querySelector(`#${UI_ID} button.secondary`);
-  if (btn) btn.style.display = job ? 'block' : 'none';
+  if (btn) {
+    // Rebind away from email mode if the page context changed.
+    if (btn.dataset.mailMode) {
+      const fresh = btn.cloneNode(true);
+      delete fresh.dataset.mailMode;
+      fresh.textContent = '🔥 Send to JobForge';
+      fresh.title = 'Capture this posting into your JobForge cockpit';
+      fresh.addEventListener('click', capture);
+      btn.replaceWith(fresh);
+    } else {
+      btn.style.display = job ? 'block' : 'none';
+    }
+  }
   if (fillBtn) fillBtn.style.display = formLikely ? 'block' : 'none';
+}
+
+function maybeInjectMail() {
+  const mail = currentEmail();
+  mountUI();
+  const btn = document.querySelector(`#${UI_ID} button:not(.secondary)`);
+  const fillBtn = document.querySelector(`#${UI_ID} button.secondary`);
+  if (btn) {
+    if (!btn.dataset.mailMode) {
+      const fresh = btn.cloneNode(true);
+      fresh.dataset.mailMode = '1';
+      fresh.textContent = '🛡 Check this email';
+      fresh.title = 'Screen the open email for recruitment fraud with JobForge';
+      fresh.addEventListener('click', checkEmail);
+      btn.replaceWith(fresh);
+    } else {
+      btn.style.display = mail ? 'block' : 'none';
+    }
+  }
+  if (fillBtn) fillBtn.style.display = 'none';
 }
 
 async function capture() {
@@ -185,22 +245,20 @@ async function capture() {
   const job = currentJob();
   if (!job) { say('No posting detected on this page. Open a specific job and try again.'); return; }
   say('Capturing into JobForge...');
-  try {
-    const res = await fetch(`${SERVER()}/api/extension/capture`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-jobforge-token': token },
-      body: JSON.stringify({ job })
-    });
-    const data = await res.json();
-    if (!res.ok) { say(data.error || 'Capture failed. Is JobForge running?'); return; }
-    if (data.duplicate) { say('Already in your cockpit. Nothing duplicated.'); return; }
-    const bits = [];
-    if (data.match) bits.push(`score ${Math.round(data.match.score)}`);
-    if (data.scan && data.scan.flags > 0) bits.push(`${data.scan.flags} scam indicator${data.scan.flags > 1 ? 's' : ''}`);
-    say(`Captured${bits.length ? ` · ${bits.join(' · ')}` : ''}. Open JobForge to review it.`);
-  } catch {
-    say('Could not reach JobForge on localhost:8787. Start it with npm run dev or npm start.');
-  }
+  const res = await bgFetch('/api/extension/capture', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-jobforge-token': token },
+    body: JSON.stringify({ job })
+  });
+  if (res.orphaned) { say(res.error, 7000); return; }
+  const data = res.data || {};
+  if (res.status === 0 || !res.ok && res.status === 0) { say('Could not reach JobForge on localhost:8787. Start it with npm run dev or npm start.'); return; }
+  if (!res.ok) { say(data.error || `Capture failed (HTTP ${res.status}).`); return; }
+  if (data.duplicate) { say('Already in your cockpit. Nothing duplicated.'); return; }
+  const bits = [];
+  if (data.match) bits.push(`score ${Math.round(data.match.score)}`);
+  if (data.scan && data.scan.flags > 0) bits.push(`${data.scan.flags} scam indicator${data.scan.flags > 1 ? 's' : ''}`);
+  say(`Captured${bits.length ? ` · ${bits.join(' · ')}` : ''}. Open JobForge to review it.`);
 }
 
 // ---------- autofill ----------
@@ -261,8 +319,9 @@ async function resolveFillValues() {
   const localFields = local.fields || {};
   let server = null;
   try {
-    const res = await fetch(`${SERVER()}/api/extension/packet`, { headers: { 'x-jobforge-token': token } });
-    if (res.ok) server = (await res.json()).contact || {};
+    const res = await bgFetch('/api/extension/packet', { headers: { 'x-jobforge-token': token } });
+    if (res.orphaned) return { values: { __orphaned: true, __error: res.error } };
+    if (res.ok && res.data) server = res.data.contact || {};
   } catch { /* offline: local values still work */ }
   const values = {};
   for (const key of ['name', 'email', 'phone', 'city', 'linkedin', 'github', 'notice', 'salary', 'relocation', 'experience', 'why']) {
@@ -277,6 +336,7 @@ async function autofill() {
   if (!token) { say('Pair first: paste your JobForge token in the helper options.'); return; }
   say('Reading your saved autofill data...');
   const { values } = await resolveFillValues();
+  if (values.__orphaned) { say(values.__error, 7000); return; }
 
   const fields = [...document.querySelectorAll('input:not([type=hidden]):not([type=submit]):not([type=checkbox]):not([type=radio]), textarea')];
   let filled = 0;
@@ -307,16 +367,29 @@ async function autofill() {
   }
 }
 
-// Watch single page apps: LinkedIn and Naukri swap content without navigation.
+// Watch single page apps: LinkedIn, Naukri and Gmail swap content without
+// navigation. The observer fires hundreds of times per second on those sites,
+// so everything runs through a trailing debounce instead of reacting to every
+// mutation. Orphaned context (extension reloaded while this tab stayed open)
+// is detected on the next interaction with a clear refresh message.
 let lastUrl = location.href;
-const observer = new MutationObserver(() => {
-  if (location.href !== lastUrl) {
-    lastUrl = location.href;
-    const el = document.querySelector(`#${UI_ID} .jf-msg`);
-    if (el) el.style.display = 'none';
-  }
-  maybeInject();
-});
+let debounceTimer = null;
+
+function scheduleInject() {
+  if (debounceTimer) clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    debounceTimer = null;
+    if (!chrome.runtime?.id) return; // context invalidated, nothing to do
+    if (location.href !== lastUrl) {
+      lastUrl = location.href;
+      const el = document.querySelector(`#${UI_ID} .jf-msg`);
+      if (el) el.style.display = 'none';
+    }
+    maybeInject();
+  }, 350);
+}
+
+const observer = new MutationObserver(scheduleInject);
 observer.observe(document.documentElement, { childList: true, subtree: true });
 maybeInject();
 
@@ -363,18 +436,16 @@ async function checkEmail() {
   const mail = currentEmail();
   if (!mail) { say('Open the email you want checked, then press the button again.'); return; }
   say('Screening this email...');
-  try {
-    const res = await fetch(`${SERVER()}/api/mail/analyze`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-jobforge-token': token },
-      body: JSON.stringify(mail)
-    });
-    const data = await res.json();
-    if (!res.ok) { say(data.error || 'The screen failed. Is JobForge running?'); return; }
-    showEmailVerdict(data.result);
-  } catch {
-    say('Could not reach JobForge on localhost:8787. Start it with npm run dev or npm start.');
-  }
+  const res = await bgFetch('/api/mail/analyze', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-jobforge-token': token },
+    body: JSON.stringify(mail)
+  });
+  if (res.orphaned) { say(res.error, 7000); return; }
+  const data = res.data || {};
+  if (res.status === 0) { say('Could not reach JobForge on localhost:8787. Start it with npm run dev or npm start.'); return; }
+  if (!res.ok) { say(data.error || `The screen failed (HTTP ${res.status}).`); return; }
+  showEmailVerdict(data.result);
 }
 
 const VERDICT_COLORS = { clear: '#34d399', low: '#22d3ee', medium: '#fbbf24', high: '#fb4d4d', critical: '#fb4d4d' };
@@ -407,28 +478,3 @@ function showEmailVerdict(result) {
   setTimeout(() => { const el = document.getElementById('jf-mail-verdict'); if (el) el.remove(); }, 60000);
 }
 
-// Swap the floating button into email mode on mail sites.
-const originalMaybeInject = maybeInject;
-maybeInject = function () {
-  if (isMailSite()) {
-    const mail = currentEmail();
-    mountUI();
-    const btn = document.querySelector(`#${UI_ID} button:not(.secondary)`);
-    const fillBtn = document.querySelector(`#${UI_ID} button.secondary`);
-    if (btn) {
-      btn.textContent = '🛡 Check this email';
-      btn.title = 'Screen the open email for recruitment fraud with JobForge';
-      btn.style.display = mail ? 'block' : 'none';
-      // Rebind click: replace node to drop the job capture handler.
-      if (!btn.dataset.mailMode) {
-        const fresh = btn.cloneNode(true);
-        fresh.dataset.mailMode = '1';
-        fresh.addEventListener('click', checkEmail);
-        btn.replaceWith(fresh);
-      }
-    }
-    if (fillBtn) fillBtn.style.display = 'none';
-    return;
-  }
-  originalMaybeInject();
-};
